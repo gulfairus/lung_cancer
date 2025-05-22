@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 import pickle
 import tarfile
-from tqdm import tqdm_notebook as tqdm
+#from tqdm import tqdm_notebook as tqdm
 from google.cloud import storage
-tqdm().pandas()
+#tqdm().pandas()
 
 from tensorflow.keras.applications.densenet import DenseNet121, preprocess_input
 
