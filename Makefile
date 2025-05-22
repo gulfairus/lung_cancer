@@ -5,7 +5,7 @@ reinstall_package:
 	@pip install -e .
 
 run_preprocess_images_001:
-	python -c 'from classification.preprocess.densenet121 import extract_features_001; extract_features_001()'
+	python -c 'from classification.preprocess.densenet121 import preprocess_features_001; preprocess_features_001()'
 
 run_preprocess_svm:
 	python -c 'from classification.svm.interface.main import preprocess; preprocess()'
