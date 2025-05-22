@@ -37,7 +37,7 @@ def extract_features_001():
             features[img] = feature
             timestamp = time.strftime("%Y%m%d-%H%M%S")
 
-            feature_path = os.path.join(main_dir_cloud, "processed/features/densenet121", "images_001.pickle")
-            with open(feature_path, "wb") as file:
-                pickle.dump(features, file)
+    feature_path = os.path.join(main_dir_cloud, "processed/features/densenet121", "images_001.pickle")
+    with open(feature_path, "wb") as file:
+        pickle.dump(features, file)
     return features
