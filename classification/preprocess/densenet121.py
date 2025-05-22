@@ -25,16 +25,16 @@ def extract_features_001():
     for member in tar.getmembers():
         if len(member.name.split('/'))==2:
             img = member.name.split('/')[1]
-            image = Image.open(tar.extractfile(member))
-            image = image.convert('RGB')
-            image = image.resize((224,224))
-            image = np.expand_dims(image, axis=0)
-            image = preprocess_input(image)
-            image = image/255
+            image1 = Image.open(tar.extractfile(member))
+            image2 = image1.convert('RGB')
+            image3 = image2.resize((224,224))
+            image4 = np.expand_dims(image3, axis=0)
+            image5 = preprocess_input(image4)
+            image6 = image5/255
         #    image = image - 1.0
             # image = image.flatten()
             # print(image.shape)
-            feature = model.predict(image)
+            feature = model.predict(image6)
             features[img] = feature
             #timestamp = time.strftime("%Y%m%d-%H%M%S")
 
