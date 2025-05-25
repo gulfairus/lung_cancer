@@ -25,3 +25,4 @@ scikit-image
 streamlit
 fastapi
 uvicorn
+Pillow

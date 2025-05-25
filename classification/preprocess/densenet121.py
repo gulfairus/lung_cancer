@@ -7,7 +7,7 @@ import pandas as pd
 import pickle
 import tarfile
 #from tqdm import tqdm_notebook as tqdm
-from google.cloud import storage
+#from google.cloud import storage
 #tqdm().pandas()
 
 from tensorflow.keras.applications.densenet import DenseNet121, preprocess_input
@@ -21,7 +21,7 @@ def preprocess_features_001():
     from tensorflow.keras.applications.densenet import DenseNet121, preprocess_input
     def extract_features():
         main_dir_cloud= "/home/gulfairus/.database/lung_cancer/data/"
-        #model = DenseNet121(include_top=False,weights='imagenet',input_shape=(224,224,3),pooling='avg')
+        model = DenseNet121(include_top=False,weights='imagenet',input_shape=(224,224,3),pooling='avg')
         tar = tarfile.open(os.path.join(main_dir_cloud, "raw", "images_001.tar.gz"))
         features = {}
         for member in tar.getmembers():
@@ -36,8 +36,9 @@ def preprocess_features_001():
             #    image = image - 1.0
                 # image = image.flatten()
                 # print(image.shape)
-                #feature = model.predict(image6)
-                features[img] = image6
+                feature = model.predict(image6)
+                feature = feature.flatten()
+                features[img] = feature
                 #timestamp = time.strftime("%Y%m%d-%H%M%S")
                 print("✅ Features extracted")
         return features
