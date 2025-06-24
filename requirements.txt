@@ -26,3 +26,4 @@ streamlit
 fastapi
 uvicorn
 Pillow
+pydicom

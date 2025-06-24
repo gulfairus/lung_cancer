@@ -31,7 +31,8 @@ LOCAL_REGISTRY_PATH =  os.path.join(os.path.expanduser('~'), ".database", "lung_
 TRAIN_DATA_PATH_CLOUD = "/home/user/Covid19/raw_data/cloud/train_test/train_test/train"
 TEST_DATA_PATH_CLOUD = "/home/user/Covid19/raw_data/cloud/train_test/train_test/test"
 
-TRAIN_DATA_PATH = "/home/user/code/gulfairus/Covid19/raw_data/cloud/train_test/train_val/train"
+RAW_DATA_PATH = "/home/gulfairus/.database/lung_cancer/data/raw"
+DICOM_DATA_PATH = "/mnt/c/Users/User/Downloads/dicom/dicom"
 TEST_DATA_PATH = "/home/user/code/gulfairus/Covid19/raw_data/cloud/train_test/test"
 #TRAIN_NORM_PATH = "/home/user/code/gulfairus/Covid19/raw_data/cloud/train_test/train_val/train_val_norm"
 #TRAIN_OTHER_PATH = "/home/user/code/gulfairus/Covid19/raw_data/cloud/train_test/train_val/train"

@@ -4,7 +4,7 @@ from google.cloud import bigquery
 from colorama import Fore, Style
 from pathlib import Path
 
-from detection.params import *
+from classification.params import *
 
 
 def load_data_to_bq(
