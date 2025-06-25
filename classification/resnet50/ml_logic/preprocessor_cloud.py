@@ -53,15 +53,15 @@ def preprocess_data():
 
         dicom_data = {}
 
+        for i, row in df.iterrows():
+            #print(row)
+            im = row['id'].split('.')[0]
+            dic = im + '.dcm'
 
-        for blob in blobs:
-            if not blob.name.lower().endswith('.dcm'):
-                continue  # Skip non-DICOM files
-            nam = blob.name.split('/')[2]
-            for i, row in df.iterrows():
-                #print(row)
-                im = row['id'].split('.')[0]
-                dic = im + '.dcm'
+            for blob in blobs:
+                if not blob.name.lower().endswith('.dcm'):
+                    continue  # Skip non-DICOM files
+                nam = blob.name.split('/')[2]
 
                 if dic == nam:
                     print(nam)
