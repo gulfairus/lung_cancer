@@ -47,7 +47,7 @@ def preprocess_data():
         train_df = train_df.download_as_text()
         train_df = pd.read_csv(StringIO(train_df))
         print(train_df.shape)
-        df = train_df[['id']]
+        df = list(train_df['id'])
 
         blobs = bucket.list_blobs(prefix=prefix)
 
@@ -57,25 +57,20 @@ def preprocess_data():
             if not blob.name.lower().endswith('.dcm'):
                 continue  # Skip non-DICOM files
             nam = blob.name.split('/')[2]
+            nam = nam.split('.')[0]
+            nam = nam + '.png'
 
-            for i, row in df.iterrows():
-                #print(row)
-                im = row['id'].split('.')[0]
-                dic = im + '.dcm'
+            if nam in df:
+                dcm_bytes = blob.download_as_bytes()
+                dcm_file = pydicom.dcmread(io.BytesIO(dcm_bytes))
+                dcm_file = dcm_file.pixel_array.astype(np.float32)
+                img = cv2.resize(dcm_file, image_size)  # Resize to (H, W)
+                img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+                img = img / 255.0
+                dicom_data[blob.name] = img
+                print(len(dicom_data.keys()))
 
-                if dic == nam:
-                    dcm_bytes = blob.download_as_bytes()
-                    dcm_file = pydicom.dcmread(io.BytesIO(dcm_bytes))
-                    dcm_file = dcm_file.pixel_array.astype(np.float32)
-                    img = cv2.resize(dcm_file, image_size)  # Resize to (H, W)
-                    img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-                    img = img / 255.0
-                    dicom_data[blob.name] = img
-                    print(len(dicom_data.keys()))
 
-                if len(dicom_data.keys())==78506:
-                #if len(dicom_data.keys())==5:
-                    break
             if len(dicom_data.keys())==78506:
             #if len(dicom_data.keys())==5:
                 break
