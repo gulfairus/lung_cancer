@@ -50,7 +50,7 @@ def preprocess_data():
                 continue  # Skip non-DICOM files
             nam = blob.name.split('/')[2]
             for i, row in df.iterrows():
-                #print(row)
+                print(row)
                 im = row['id'].split('.')[0]
                 dic = im + '.dcm'
 
