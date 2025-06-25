@@ -17,7 +17,8 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import pydicom
 import cv2
 from classification.params import *
-
+from google.cloud import storage
+import io
 
 
 def preprocess_data():
@@ -26,11 +27,9 @@ def preprocess_data():
 
     image_dir = DICOM_DATA_PATH
 
-
     train_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_train.csv"))
     val_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_val.csv"))
     test_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_test.csv"))
-
 
 
     def load_dicom_image(path, image_size):
@@ -38,16 +37,16 @@ def preprocess_data():
         img = ds.pixel_array.astype(np.float32)
         img = cv2.resize(img, image_size)  # Resize to (H, W)
         img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-        if len(img.shape) == 2:
-            img = np.expand_dims(img, axis=-1)
-        img = np.repeat(img, 3, axis=-1)  # Convert to 3 channels
+#        if len(img.shape) == 2:
+#            img = np.expand_dims(img, axis=-1)
+#        img = np.repeat(img, 3, axis=-1)  # Convert to 3 channels
         return img
 
     def compute_mean_std_train(df, image_dir, image_size):
         pixels = []
-        df = df[['id']]
+        df = df[['id']][:1000]
         for i, row in df.iterrows():
-            print(row)
+            #print(row)
             im = row['id'].split('.')[0]
             dic = im + '.dcm'
             img_path = f"{image_dir}/{dic}"
@@ -58,8 +57,8 @@ def preprocess_data():
             pixels.append(img_array)
         pixels = np.stack(pixels)
         print(pixels.shape)
-        mean = np.mean(pixels, axis=(0, 1, 2))
-        std = np.std(pixels, axis=(0, 1, 2))
+        mean = np.mean(pixels)
+        std = np.std(pixels)
         return mean, std
 
     mean, std = compute_mean_std_train(train_df, image_dir, image_size=(320, 320))
