@@ -73,19 +73,49 @@ def preprocess_data():
 
             #if len(dicom_data.keys())==78506:
             if len(dicom_data.keys())==100:
-                break
+                pixels = np.stack(dicom_data.values())
+                print(pixels.shape)
+                mean = np.mean(pixels)
+                std = np.std(pixels)
+                print(mean, std)
+            if len(dicom_data.keys())==200:
+                pixels = np.stack(dicom_data.values())
+                print(pixels.shape)
+                mean = np.mean(pixels)
+                std = np.std(pixels)
+                print(mean, std)
+            if len(dicom_data.keys())==300:
+                pixels = np.stack(dicom_data.values())
+                print(pixels.shape)
+                mean = np.mean(pixels)
+                std = np.std(pixels)
+                print(mean, std)
+            if len(dicom_data.keys())==400:
+                pixels = np.stack(dicom_data.values())
+                print(pixels.shape)
+                mean = np.mean(pixels)
+                std = np.std(pixels)
+                print(mean, std)
+            if len(dicom_data.keys())==500:
+                pixels = np.stack(dicom_data.values())
+                print(pixels.shape)
+                mean = np.mean(pixels)
+                std = np.std(pixels)
+                print(mean, std)
 
 
 
-        return dicom_data
+        #return dicom_data
+        return None
 
-    dicom_data = read_dicom_images_from_gcs(bucket_name, prefix='dicom/dicom/', image_size=image_size)
+    #dicom_data = read_dicom_images_from_gcs(bucket_name, prefix='dicom/dicom/', image_size=image_size)
+    read_dicom_images_from_gcs(bucket_name, prefix='dicom/dicom/', image_size=image_size)
+    #pixels = np.stack(dicom_data.values())
+    #print(pixels.shape)
+    #mean = np.mean(pixels)
+    #std = np.std(pixels)
 
-    pixels = np.stack(dicom_data.values())
-    print(pixels.shape)
-    mean = np.mean(pixels)
-    std = np.std(pixels)
+    #return mean, std
 
-    return mean, std
 
 print(preprocess_data())
