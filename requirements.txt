@@ -20,7 +20,7 @@ python-dotenv
 psycopg2-binary
 vit_keras
 tensorflow_addons
-opencv-python
+opencv-python-headless
 scikit-image
 streamlit
 fastapi
