@@ -73,11 +73,11 @@ def preprocess_data():
                     img = img / 255.0
                     dicom_data[blob.name] = img
 
-                #if len(dicom_data.keys())==78506:
-                if len(dicom_data.keys())==5:
+                if len(dicom_data.keys())==78506:
+                #if len(dicom_data.keys())==5:
                     break
-            #if len(dicom_data.keys())==78506:
-            if len(dicom_data.keys())==5:
+            if len(dicom_data.keys())==78506:
+            #if len(dicom_data.keys())==5:
                 break
 
 
