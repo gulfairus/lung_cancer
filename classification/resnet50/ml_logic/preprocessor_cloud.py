@@ -28,7 +28,7 @@ def preprocess_data():
     #image_dir = DICOM_DATA_PATH
 
 
-    train_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_train.csv"))
+    train_df = pd.read_csv(os.path.join('/home/gulfairus/.database/lung_cancer/data/raw', "miccai2023_nih-cxr-lt_labels_train.csv"))
     #val_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_val.csv"))
     #test_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_test.csv"))
     print(train_df.shape)
