@@ -19,6 +19,7 @@ import cv2
 from classification.params import *
 from google.cloud import storage
 import io
+from io import StringIO
 
 
 def preprocess_data():
@@ -33,14 +34,20 @@ def preprocess_data():
 
     def read_dicom_images_from_gcs(bucket_name, prefix='dicom/dicom/', image_size=image_size):
 
-        train_df = pd.read_csv(os.path.join('/home/gulfairus/.database/lung_cancer/data/raw', "miccai2023_nih-cxr-lt_labels_train.csv"))
+        #train_df = pd.read_csv(os.path.join('/home/gulfairus/.database/lung_cancer/data/raw', "miccai2023_nih-cxr-lt_labels_train.csv"))
         #val_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_val.csv"))
         #test_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_test.csv"))
-        print(train_df.shape)
-        df = train_df[['id']]
+        #print(train_df.shape)
+        #df = train_df[['id']]
 
         client = storage.Client()
         bucket = client.bucket(bucket_name)
+
+        train_df = bucket.blob('dicom/miccai2023_nih-cxr-lt_labels_train.csv')
+        train_df = train_df.download_as_text()
+        train_df = pd.read_csv(StringIO(train_df))
+        print(train_df.shape)
+        df = train_df[['id']]
 
         blobs = bucket.list_blobs(prefix=prefix)
 
@@ -52,7 +59,7 @@ def preprocess_data():
                 continue  # Skip non-DICOM files
             nam = blob.name.split('/')[2]
             for i, row in df.iterrows():
-                print(row)
+                #print(row)
                 im = row['id'].split('.')[0]
                 dic = im + '.dcm'
 
@@ -66,9 +73,11 @@ def preprocess_data():
                     img = img / 255.0
                     dicom_data[blob.name] = img
 
-                if len(dicom_data.keys())==78506:
+                #if len(dicom_data.keys())==78506:
+                if len(dicom_data.keys())==5:
                     break
-            if len(dicom_data.keys())==78506:
+            #if len(dicom_data.keys())==78506:
+            if len(dicom_data.keys())==5:
                 break
 
 
