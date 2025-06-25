@@ -71,8 +71,8 @@ def preprocess_data():
                 print(len(dicom_data.keys()))
 
 
-            if len(dicom_data.keys())==78506:
-            #if len(dicom_data.keys())==5:
+            #if len(dicom_data.keys())==78506:
+            if len(dicom_data.keys())==100:
                 break
 
 
