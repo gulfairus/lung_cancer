@@ -13,7 +13,7 @@ import tarfile
 from tqdm import tqdm_notebook as tqdm
 #tqdm().pandas()
 import tensorflow
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+#from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import pydicom
 import cv2
 from classification.params import *
@@ -28,15 +28,17 @@ def preprocess_data():
     #image_dir = DICOM_DATA_PATH
 
 
-    train_df = pd.read_csv(os.path.join('/home/gulfairus/.database/lung_cancer/data/raw', "miccai2023_nih-cxr-lt_labels_train.csv"))
-    #val_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_val.csv"))
-    #test_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_test.csv"))
-    print(train_df.shape)
     bucket_name = 'lung_cancer1'
     image_size = (320, 320)
-    df = train_df[['id']]
 
     def read_dicom_images_from_gcs(bucket_name, prefix='dicom/dicom/', image_size=image_size):
+
+        train_df = pd.read_csv(os.path.join('/home/gulfairus/.database/lung_cancer/data/raw', "miccai2023_nih-cxr-lt_labels_train.csv"))
+        #val_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_val.csv"))
+        #test_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_test.csv"))
+        print(train_df.shape)
+        df = train_df[['id']]
+
         client = storage.Client()
         bucket = client.bucket(bucket_name)
 
