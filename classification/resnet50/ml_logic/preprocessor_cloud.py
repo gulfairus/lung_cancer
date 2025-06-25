@@ -53,18 +53,17 @@ def preprocess_data():
 
         dicom_data = {}
 
-        for i, row in df.iterrows():
-            #print(row)
-            im = row['id'].split('.')[0]
-            dic = im + '.dcm'
+        for blob in blobs:
+            if not blob.name.lower().endswith('.dcm'):
+                continue  # Skip non-DICOM files
+            nam = blob.name.split('/')[2]
 
-            for blob in blobs:
-                if not blob.name.lower().endswith('.dcm'):
-                    continue  # Skip non-DICOM files
-                nam = blob.name.split('/')[2]
+            for i, row in df.iterrows():
+                #print(row)
+                im = row['id'].split('.')[0]
+                dic = im + '.dcm'
 
                 if dic == nam:
-                    print(nam)
                     dcm_bytes = blob.download_as_bytes()
                     dcm_file = pydicom.dcmread(io.BytesIO(dcm_bytes))
                     dcm_file = dcm_file.pixel_array.astype(np.float32)
@@ -72,6 +71,7 @@ def preprocess_data():
                     img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
                     img = img / 255.0
                     dicom_data[blob.name] = img
+                    print(len(dicom_data.keys()))
 
                 if len(dicom_data.keys())==78506:
                 #if len(dicom_data.keys())==5:
