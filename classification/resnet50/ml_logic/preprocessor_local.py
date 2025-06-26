@@ -68,8 +68,8 @@ def preprocess_data():
         arr = ds.pixel_array.astype(np.float32)
         arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))  # Normalize to [0,1]
         arr = np.stack([arr] * 3, axis=-1)  # Make 3-channel RGB
-        mean = np.mean(arr)
-        std = np.std(arr) + 1e-6  # add epsilon to avoid div by 0
+        mean = np.mean(arr, axis = (0,1,2))
+        std = np.std(arr, axis = (0,1,2))  # add epsilon to avoid div by 0
         arr = (arr - mean) / std
         #return arr.astype(np.float32), np.array(mean, dtype=np.float32), np.array(std, dtype=np.float32)
         return arr, mean, std
@@ -122,10 +122,13 @@ def preprocess_data():
 dataset = preprocess_data()
 for images, labels, means, stds in dataset:
     print("Image batch shape:", images.shape)
-    train_main.append(np.mean(means))
-    train_std.append(np.mean(stds))
-print("mean:", train_main)
-print("std:", train_std)
+    train_main.append(np.mean(means, axis=(0,1,2)))
+    train_std.append(np.mean(stds, axis=(0,1,2)))
+
+main_all = np.main(train_main, axis=(0,1,2))
+std_all = np.std(train_std, axis=(0,1,2))
+print("mean:", main_all)
+print("std:", std_all)
 
 
 #train_main = np.mean(train_main, axis = (0,1,2))
