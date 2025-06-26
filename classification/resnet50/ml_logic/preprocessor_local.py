@@ -125,8 +125,8 @@ for images, labels, means, stds in dataset:
     train_main.append(np.mean(means, axis=(0,1,2)))
     train_std.append(np.mean(stds, axis=(0,1,2)))
 
-main_all = np.main(train_main, axis=(0,1,2))
-std_all = np.std(train_std, axis=(0,1,2))
+main_all = np.mean(train_main, axis=0)
+std_all = np.mean(train_std, axis=0)
 print("mean:", main_all)
 print("std:", std_all)
 
