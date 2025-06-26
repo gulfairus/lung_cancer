@@ -65,10 +65,13 @@ def preprocess_data():
         arr = ds.pixel_array.astype(np.float32)
         arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))  # Normalize to [0,1]
         arr = np.stack([arr] * 3, axis=-1)  # Make 3-channel RGB
-        train_main.append(np.mean(arr))
-        train_std.append(np.std(arr))
+        #train_main.append(np.mean(arr))
+        #train_std.append(np.std(arr))
         arr = (arr - np.mean(arr)) / (np.std(arr) + 1e-6)
-        return arr
+        #return arr
+        return np.mean(arr), np.std(arr)
+
+
 
     def load_image_tf(dicom_path, label, image_size=image_size):
         def _load(path_str, label_arr):
@@ -92,18 +95,24 @@ def preprocess_data():
     dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id]
 
     #print(dicom_paths)
+    for blob in dicom_paths:
+        mean, std = read_dicom_from_gcs(blob)
+        train_main.append(mean)
+        train_std.append(std)
+
 
     label_array = np.array(labels.tolist(), dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
 
-    dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
-    dataset = dataset.map(lambda path, label: load_image_tf(path, label), num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
+    #dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
+    #dataset = dataset.map(lambda path, label: load_image_tf(path, label), num_parallel_calls=tf.data.AUTOTUNE)
+    #dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
 
-    return dataset, train_main, train_std
+    #return dataset, train_main, train_std
+    return train_main, train_std
 
 #iterator = iter(preprocess_data())
-dataset, train_main, train_std = preprocess_data()
-print(len(train_main), len(train_std))
+train_main, train_std = preprocess_data()
+print(train_main)
