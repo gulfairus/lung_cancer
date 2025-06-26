@@ -86,7 +86,7 @@ def preprocess_data():
 
     blobs = bucket.list_blobs(prefix='dicom/dicom')
     dicom_paths = [blob.name for blob in blobs if blob.name.endswith(".dcm")]
-    print(dicom_paths)
+    #print(dicom_paths)
 
     label_array = np.array(labels.tolist(), dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
@@ -97,7 +97,7 @@ def preprocess_data():
     dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
 
-    return None
+    return dataset
 
 iterator = iter(preprocess_data())
 print(next(iterator))
