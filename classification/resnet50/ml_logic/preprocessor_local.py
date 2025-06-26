@@ -21,6 +21,8 @@ from google.cloud import storage
 import io
 import tensorflow as tf
 
+train_main = []
+train_std = []
 
 def preprocess_data():
 
@@ -119,8 +121,10 @@ def preprocess_data():
 dataset = preprocess_data()
 for images, labels, means, stds in dataset:
     print("Image batch shape:", images.shape)
-    print("Per-image mean:", means.numpy())
-    #print("Per-image std:", stds.numpy())
+    train_main.append(np.mean(means))
+    train_std.append(np.mean(stds))
+print("mean:", train_main)
+print("std:", train_std)
 
 
 #train_main = np.mean(train_main, axis = (0,1,2))
