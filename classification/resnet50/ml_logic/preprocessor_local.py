@@ -116,7 +116,8 @@ def preprocess_data():
     return dataset
 
 #iterator = iter(preprocess_data())
-dataset, train_main, train_std = preprocess_data()
-train_main = np.mean(train_main, axis = (0,1,2))
-train_std = np.std(train_std, axis = (0,1,2))
-print(train_main, train_std)
+dataset = preprocess_data()
+
+#train_main = np.mean(train_main, axis = (0,1,2))
+#train_std = np.std(train_std, axis = (0,1,2))
+#print(train_main, train_std)
