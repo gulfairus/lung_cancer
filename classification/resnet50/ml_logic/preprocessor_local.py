@@ -65,29 +65,32 @@ def preprocess_data():
         arr = ds.pixel_array.astype(np.float32)
         arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))  # Normalize to [0,1]
         arr = np.stack([arr] * 3, axis=-1)  # Make 3-channel RGB
-        #train_main.append(np.mean(arr))
-        #train_std.append(np.std(arr))
-        arr = (arr - np.mean(arr)) / (np.std(arr) + 1e-6)
-        #return arr
-        return np.mean(arr), np.std(arr)
+        mean = np.mean(arr)
+        std = np.std(arr) + 1e-6  # add epsilon to avoid div by 0
+        arr = (arr - mean) / std
+        return arr.astype(np.float32), np.array(mean, dtype=np.float32), np.array(std, dtype=np.float32)
+        #return np.mean(arr), np.std(arr)
 
 
 
-    def load_image_tf(dicom_path, label, image_size=image_size):
+    def load_image_tf(dicom_path, label, image_size=image_size, num_classes=num_classes):
         def _load(path_str, label_arr):
-            image = read_dicom_from_gcs(path_str.numpy().decode('utf-8'))[0]
+            image, mean, std = read_dicom_from_gcs(path_str.numpy().decode('utf-8'))
             image = tf.image.resize(image, image_size)
             label_tensor = tf.convert_to_tensor(label_arr, dtype=tf.float32)
-            return image, label_tensor
+            return image, label_tensor, mean, std
 
-        image, label = tf.py_function(
+        image, label, mean, std = tf.py_function(
             func=_load,
             inp=[dicom_path, label],
             Tout=(tf.float32, tf.float32)
         )
         image.set_shape([*image_size, 3])
         label.set_shape([num_classes])
-        return image, label
+        mean.set_shape([])
+        std.set_shape([])
+
+        return image, label, mean, std
 
 
 
@@ -95,24 +98,25 @@ def preprocess_data():
     dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id]
 
     #print(dicom_paths)
-    for blob in dicom_paths:
-        mean, std = read_dicom_from_gcs(blob)
-        train_main.append(mean)
-        train_std.append(std)
+    #for blob in dicom_paths:
+    #    mean, std = read_dicom_from_gcs(blob)
+    #    train_main.append(mean)
+    #    train_std.append(std)
 
 
     label_array = np.array(labels.tolist(), dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
 
-    #dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
-    #dataset = dataset.map(lambda path, label: load_image_tf(path, label), num_parallel_calls=tf.data.AUTOTUNE)
-    #dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
+    dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
+    dataset = dataset.map(lambda path, label: load_image_tf(path, label, image_size=image_size, num_classes=num_classes), num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
 
-    #return dataset, train_main, train_std
-    return train_main, train_std
+    return dataset
 
 #iterator = iter(preprocess_data())
-train_main, train_std = preprocess_data()
-print(train_main)
+dataset, train_main, train_std = preprocess_data()
+train_main = np.mean(train_main, axis = (0,1,2))
+train_std = np.std(train_std, axis = (0,1,2))
+print(train_main, train_std)
