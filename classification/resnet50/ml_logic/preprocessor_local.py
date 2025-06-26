@@ -56,14 +56,14 @@ def preprocess_data():
     bucket = client.bucket(bucket_name)
 
 
-    def read_dicom_from_gcs(blob_path, df):
-        if blob_path.split('/')[2] in df:
-            blob = bucket.blob(blob_path)
-            dicom_bytes = blob.download_as_bytes()
-            ds = pydicom.dcmread(io.BytesIO(dicom_bytes))
-            arr = ds.pixel_array.astype(np.float32)
-            arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))  # Normalize to [0,1]
-            arr = np.stack([arr] * 3, axis=-1)  # Make 3-channel RGB
+    def read_dicom_from_gcs(blob_path):
+
+        blob = bucket.blob(blob_path)
+        dicom_bytes = blob.download_as_bytes()
+        ds = pydicom.dcmread(io.BytesIO(dicom_bytes))
+        arr = ds.pixel_array.astype(np.float32)
+        arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))  # Normalize to [0,1]
+        arr = np.stack([arr] * 3, axis=-1)  # Make 3-channel RGB
         return arr
 
     def load_image_tf(dicom_path, label, image_size=image_size):
@@ -85,7 +85,8 @@ def preprocess_data():
 
 
     blobs = bucket.list_blobs(prefix='dicom/dicom')
-    dicom_paths = [blob.name for blob in blobs if blob.name.endswith(".dcm")]
+    dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id]
+
     #print(dicom_paths)
 
     label_array = np.array(labels.tolist(), dtype=np.float32)
