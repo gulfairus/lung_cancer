@@ -117,6 +117,11 @@ def preprocess_data():
 
 #iterator = iter(preprocess_data())
 dataset = preprocess_data()
+for images, labels, means, stds in dataset:
+    print("Image batch shape:", images.shape)
+    print("Per-image mean:", means.numpy())
+    #print("Per-image std:", stds.numpy())
+
 
 #train_main = np.mean(train_main, axis = (0,1,2))
 #train_std = np.std(train_std, axis = (0,1,2))
