@@ -122,6 +122,7 @@ def preprocess_data():
 dataset = preprocess_data()
 for images, labels, means, stds in dataset:
     print("Image batch shape:", images.shape)
+    print(means)
     train_main.append(np.mean(means, axis=(0,1,2)))
     train_std.append(np.mean(stds, axis=(0,1,2)))
 
