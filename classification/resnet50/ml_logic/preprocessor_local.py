@@ -66,12 +66,10 @@ def preprocess_data():
         arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))  # Normalize to [0,1]
         arr = np.stack([arr] * 3, axis=-1)  # Make 3-channel RGB
         mean = np.mean(arr)
-        print(mean.shape)
         std = np.std(arr) + 1e-6  # add epsilon to avoid div by 0
-        print(std.shape)
         arr = (arr - mean) / std
-        #return arr.astype(np.float32), np.array(mean, dtype=np.float32), np.array(std, dtype=np.float32)
-        return arr, mean, std
+        return arr.astype(np.float32), np.array(mean, dtype=np.float32), np.array(std, dtype=np.float32)
+        #return arr, mean, std
 
 
 
@@ -85,7 +83,7 @@ def preprocess_data():
         image, label, mean, std = tf.py_function(
             func=_load,
             inp=[dicom_path, label],
-            Tout=(tf.float32, tf.float32)
+            Tout=(tf.float32, tf.int32, tf.float32, tf.float32)
         )
         image.set_shape([*image_size, 3])
         label.set_shape([num_classes])
