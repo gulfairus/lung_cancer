@@ -50,6 +50,7 @@ def preprocess_data():
         df = list(train_df['id'])
 
         blobs = bucket.list_blobs(prefix=prefix)
+        print(blobs)
 
         dicom_data = {}
 
