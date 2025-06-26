@@ -54,7 +54,8 @@ def preprocess_data():
 
     client = storage.Client()
     bucket = client.bucket(bucket_name)
-
+    train_main = []
+    train_std = []
 
     def read_dicom_from_gcs(blob_path):
 
@@ -64,11 +65,14 @@ def preprocess_data():
         arr = ds.pixel_array.astype(np.float32)
         arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))  # Normalize to [0,1]
         arr = np.stack([arr] * 3, axis=-1)  # Make 3-channel RGB
+        train_main.append(np.mean(arr))
+        train_std.append(np.std(arr))
+        arr = (arr - np.mean(arr)) / (np.std(arr) + 1e-6)
         return arr
 
     def load_image_tf(dicom_path, label, image_size=image_size):
         def _load(path_str, label_arr):
-            image = read_dicom_from_gcs(path_str.numpy().decode('utf-8'))
+            image = read_dicom_from_gcs(path_str.numpy().decode('utf-8'))[0]
             image = tf.image.resize(image, image_size)
             label_tensor = tf.convert_to_tensor(label_arr, dtype=tf.float32)
             return image, label_tensor
@@ -98,7 +102,8 @@ def preprocess_data():
     dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
 
-    return dataset
+    return dataset, train_main, train_std
 
-iterator = iter(preprocess_data())
-print(next(iterator))
+#iterator = iter(preprocess_data())
+dataset, train_main, train_std = preprocess_data()
+print(len(train_main), len(train_std))
