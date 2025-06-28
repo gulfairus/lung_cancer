@@ -20,45 +20,49 @@ from classification.params import *
 from google.cloud import storage
 import io
 import tensorflow as tf
+import time
 
 train_main = []
 train_std = []
 
-def preprocess_data():
+def train_data():
+    start_time = time.time()
+
 
     # generate training,testing and validation batches
-    image_dir = DICOM_DATA_PATH
+    #image_dir = DICOM_DATA_PATH
 
     #load dataframe
 
     train_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_train.csv"))
-    valid_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_val.csv"))
-    test_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_test.csv"))
-    print(train_df.shape)
+    #valid_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_val.csv"))
+    #test_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_test.csv"))
+    print(f"train_df {train_df.shape}")
 
     #changing png to dcm
 
     id = train_df['id'].apply(lambda x: x.split('.')[0] + '.dcm')
     train_df['id'] = id
-    id = valid_df['id'].apply(lambda x: x.split('.')[0] + '.dcm')
-    valid_df['id'] = id
-    id = test_df['id'].apply(lambda x: x.split('.')[0] + '.dcm')
-    test_df['id'] = id
+    #id = valid_df['id'].apply(lambda x: x.split('.')[0] + '.dcm')
+    #valid_df['id'] = id
+    #id = test_df['id'].apply(lambda x: x.split('.')[0] + '.dcm')
+    #test_df['id'] = id
 
     train_id = list(train_df["id"].values)
 
     labels = train_df.drop(columns=['id', 'subj_id'])
     labels = labels.apply(lambda x: x.to_list(), axis=1)
     num_classes = len(labels[0])
+    print(num_classes)
 
 
     bucket_name = 'lung_cancer1'
-    image_size = (320, 320)
+    image_size = (224, 224)
 
     client = storage.Client()
     bucket = client.bucket(bucket_name)
-    train_main = []
-    train_std = []
+    #train_main = []
+    #train_std = []
 
     def read_dicom_from_gcs(blob_path):
 
@@ -99,6 +103,7 @@ def preprocess_data():
 
     blobs = bucket.list_blobs(prefix='dicom/dicom')
     dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id]
+    #print(dicom_paths)
 
     #print(dicom_paths)
     #for blob in dicom_paths:
@@ -110,28 +115,30 @@ def preprocess_data():
     label_array = np.array(labels.tolist(), dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
+    #print(labels.tolist()[:10])
 
     dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
     dataset = dataset.map(lambda path, label: load_image_tf(path, label, image_size=image_size, num_classes=num_classes), num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"elapsed_time {elapsed_time}")
+
 
     return dataset
 
 #iterator = iter(preprocess_data())
-dataset = preprocess_data()
+dataset = train_data()
+iterator = iter(dataset)
+print(iterator.next())
 for images, labels, means, stds in dataset:
-    print("Image batch shape:", images.shape)
-    print(means)
+    #print("Image batch shape:", images.shape)
+    #print(means)
     train_main.append(np.mean(means))
     train_std.append(np.mean(stds))
 
-main_all = np.mean(train_main)
-std_all = np.mean(train_std)
-print("mean:", main_all)
-print("std:", std_all)
+main_train = np.mean(train_main)
+std_train = np.mean(train_std)
 
-
-#train_main = np.mean(train_main, axis = (0,1,2))
-#train_std = np.std(train_std, axis = (0,1,2))
-#print(train_main, train_std)
+print(main_train, std_train)

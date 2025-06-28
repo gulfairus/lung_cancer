@@ -22,11 +22,13 @@ import requests
 from io import BytesIO
 import random
 from classification.params import *
+from classification.resnet50.ml_logic.preprocessor_train import train_data
+from classification.resnet50.ml_logic.preprocessor_valid import valid_data
+from classification.resnet50.ml_logic.preprocessor_test import test_data
 
 
 from classification.resnet50.ml_logic.data import load_data_to_bq
 from classification.resnet50.ml_logic.model import initialize_model, compile_model, train_model, evaluate_model
-from classification.resnet50.ml_logic.preprocessor import preprocess_data
 from classification.resnet50.ml_logic.registry import load_model, save_model, save_results
 from classification.resnet50.ml_logic.registry import mlflow_run, mlflow_transition_model
 
@@ -65,8 +67,20 @@ def train(
     print(Fore.MAGENTA + "\n⭐️ Use case: train" + Style.RESET_ALL)
     print(Fore.BLUE + "\generating data..." + Style.RESET_ALL)
 
+    train_main = []
+    train_std = []
+    train_generator = train_data()
+    for images, labels, means, stds in train_generator:
+        #print("Image batch shape:", images.shape)
+        #print(means)
+        train_main.append(np.mean(means))
+        train_std.append(np.mean(stds))
 
-    train_generator, validation_generator, test_generator = preprocess_data()
+    main_train = np.mean(train_main)
+    std_train = np.mean(train_std)
+
+    validation_generator = valid_data(main_train, std_train)
+    test_generator = test_data(main_train, std_train)
 
 
     # Train model using `model.py`
