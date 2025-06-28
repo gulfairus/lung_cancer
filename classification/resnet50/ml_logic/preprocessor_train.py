@@ -67,7 +67,7 @@ def train_data():
     def read_dicom_from_gcs(blob_path):
 
         blob = bucket.blob(blob_path)
-        print(blob.id)
+        print(blob.name)
         dicom_bytes = blob.download_as_bytes()
         ds = pydicom.dcmread(io.BytesIO(dicom_bytes))
         arr = ds.pixel_array.astype(np.float32)
