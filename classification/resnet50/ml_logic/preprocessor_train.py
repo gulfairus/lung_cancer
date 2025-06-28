@@ -64,11 +64,10 @@ def train_data():
     #train_main = []
     #train_std = []
     n=0
-    def read_dicom_from_gcs(blob_path,n):
+    def read_dicom_from_gcs(blob_path):
 
         blob = bucket.blob(blob_path)
-        n+=1
-        print(n)
+        print(blob.id)
         dicom_bytes = blob.download_as_bytes()
         ds = pydicom.dcmread(io.BytesIO(dicom_bytes))
         arr = ds.pixel_array.astype(np.float32)
@@ -84,7 +83,7 @@ def train_data():
 
     def load_image_tf(dicom_path, label, image_size=image_size, num_classes=num_classes):
         def _load(path_str, label_arr):
-            image, mean, std = read_dicom_from_gcs(path_str.numpy().decode('utf-8'),n)
+            image, mean, std = read_dicom_from_gcs(path_str.numpy().decode('utf-8'))
             image = tf.image.resize(image, image_size)
             label_tensor = tf.convert_to_tensor(label_arr, dtype=tf.float32)
             return image, label_tensor, mean, std
