@@ -63,11 +63,12 @@ def train_data():
     bucket = client.bucket(bucket_name)
     #train_main = []
     #train_std = []
-
+    n=0
     def read_dicom_from_gcs(blob_path):
 
         blob = bucket.blob(blob_path)
-        print(blob.name)
+        n+=1
+        print(n)
         dicom_bytes = blob.download_as_bytes()
         ds = pydicom.dcmread(io.BytesIO(dicom_bytes))
         arr = ds.pixel_array.astype(np.float32)
