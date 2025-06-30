@@ -21,6 +21,7 @@ from google.cloud import storage
 import io
 import tensorflow as tf
 import time
+import tensorflow_io as tfio
 
 train_main = []
 train_std = []
@@ -59,52 +60,76 @@ def train_data():
     bucket_name = 'lung_cancer1'
     image_size = (224, 224)
 
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
+    #client = storage.Client()
+    #bucket = client.bucket(bucket_name)
     #train_main = []
     #train_std = []
-    n=0
-    def read_dicom_from_gcs(blob_path):
 
-        blob = bucket.blob(blob_path)
-        print(blob.name)
-        dicom_bytes = blob.download_as_bytes()
-        ds = pydicom.dcmread(io.BytesIO(dicom_bytes))
-        arr = ds.pixel_array.astype(np.float32)
-        arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))  # Normalize to [0,1]
-        arr = np.stack([arr] * 3, axis=-1)  # Make 3-channel RGB
-        mean = np.mean(arr)
-        std = np.std(arr) # add epsilon to avoid div by 0
-        arr = (arr - mean) / std
+    #def read_dicom_from_gcs(blob_path):
+
+        #blob = bucket.blob(blob_path)
+        ##print(blob.name)
+        #dicom_bytes = blob.download_as_bytes()
+        #ds = pydicom.dcmread(io.BytesIO(dicom_bytes))
+        #arr = ds.pixel_array.astype(np.float32)
+        #arr = np.resize(arr, image_size)
+        #arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))  # Normalize to [0,1]
+        #arr = np.stack([arr] * 1, axis=-1)  # Make 3-channel RGB
+        #mean = np.mean(arr)
+        #std = np.std(arr) # add epsilon to avoid div by 0
+        #arr = (arr - mean) / std
         #return arr.astype(np.float32), np.array(mean, dtype=np.float32), np.array(std, dtype=np.float32)
-        return arr, mean, std
+        #return arr, mean, std
 
 
 
-    def load_image_tf(dicom_path, label, image_size=image_size, num_classes=num_classes):
-        def _load(path_str, label_arr):
-            image, mean, std = read_dicom_from_gcs(path_str.numpy().decode('utf-8'))
-            image = tf.image.resize(image, image_size)
-            label_tensor = tf.convert_to_tensor(label_arr, dtype=tf.float32)
-            return image, label_tensor, mean, std
+    def read_dicom_from_gcs2(path, label):
 
-        image, label, mean, std = tf.py_function(
-            func=_load,
-            inp=[dicom_path, label],
-            Tout=(tf.float32, tf.float32, tf.float32, tf.float32)
-        )
-        image.set_shape([*image_size, 3])
-        label.set_shape([num_classes])
-        mean.set_shape([])
-        std.set_shape([])
+        image_bytes = tf.io.read_file(path)
+        image = tfio.image.decode_dicom_image(image_bytes, dtype=tf.uint16, scale="auto")
+        image = tf.squeeze(image, axis=0)
+        image = tf.image.resize(image, image_size)
+        image = tf.cast(image, tf.float32)
+        image = image / tf.reduce_max(image)
+        # Standardize: (x - mean) / std
+        mean, variance = tf.nn.moments(image, axes=[0, 1])
+        stddev = tf.sqrt(variance)
+        #mean = tf.reduce_mean(image)
+        #stddev = tf.math.reduce_std(image)
+        image = (image - mean) / (stddev + 1e-6)  # add epsilon for stability
+        # Expand grayscale to 3 channels if needed
+        #image = tf.expand_dims(image, -1)
+        #image = tf.image.grayscale_to_rgb(image)
 
-        return image, label, mean, std
+        return image, tf.cast(label, tf.float32), mean, stddev, path
+
+
+    #def load_image_tf(dicom_path, label, image_size=image_size, num_classes=num_classes):
+    #    def _load(path_str, label_arr):
+    #        image, mean, std = read_dicom_from_gcs(path_str.numpy().decode('utf-8'))
+    #        #image = tf.image.resize(image, image_size)
+    #        label_tensor = tf.convert_to_tensor(label_arr, dtype=tf.float32)
+    #        return image, label_tensor, mean, std
+
+    #    image, label, mean, std = tf.py_function(
+    #        func=_load,
+    #        inp=[dicom_path, label],
+    #        Tout=(tf.float32, tf.float32, tf.float32, tf.float32)
+    #    )
+    #    image.set_shape([*image_size, 1])
+    #    label.set_shape([num_classes])
+    #    mean.set_shape([])
+    #    std.set_shape([])
+
+    #    return image, label, mean, std
 
 
 
-    blobs = bucket.list_blobs(prefix='dicom/dicom')
-    dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id]
-    #print(dicom_paths)
+    #blobs = bucket.list_blobs(prefix='dicom/dicom')
+    #dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
+    #dicom_paths = [f"gs://{bucket_name}/"+ blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in train_id][:5]
+    print(dicom_paths)
 
     #print(dicom_paths)
     #for blob in dicom_paths:
@@ -113,14 +138,18 @@ def train_data():
     #    train_std.append(std)
 
 
-    label_array = np.array(labels.tolist(), dtype=np.float32)
+    label_array = np.array(labels.tolist()[:5], dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
-    #print(labels.tolist()[:10])
+    print(labels.tolist()[:5])
+
+    #dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
+    #dataset = dataset.map(lambda path, label: load_image_tf(path, label, image_size=image_size, num_classes=num_classes), num_parallel_calls=tf.data.AUTOTUNE)
+    #dataset = dataset.shuffle(1000).batch(32).prefetch(tf.data.AUTOTUNE)
 
     dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
-    dataset = dataset.map(lambda path, label: load_image_tf(path, label, image_size=image_size, num_classes=num_classes), num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
+    dataset = dataset.map(read_dicom_from_gcs2, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.shuffle(1000).batch(32).prefetch(tf.data.AUTOTUNE)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -133,13 +162,13 @@ def train_data():
 dataset = train_data()
 iterator = iter(dataset)
 print(iterator.next())
-for images, labels, means, stds in dataset:
+for images, labels, means, stds, path in dataset:
     #print("Image batch shape:", images.shape)
     #print(means)
     train_main.append(np.mean(means))
     train_std.append(np.mean(stds))
 
-main_train = np.mean(train_main)
+mean_train = np.mean(train_main)
 std_train = np.mean(train_std)
 
-print(main_train, std_train)
+print(mean_train, std_train)

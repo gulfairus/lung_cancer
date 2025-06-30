@@ -17,15 +17,18 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import pydicom
 import cv2
 from classification.params import *
-from preprocessor_train import *
 from google.cloud import storage
 import io
 import tensorflow as tf
 import time
+import tensorflow_io as tfio
 
+train_main = []
+train_std = []
 
-def valid_data(train_main, train_std):
+def valid_data(mean_train, std_train):
     start_time = time.time()
+
 
     # generate training,testing and validation batches
     #image_dir = DICOM_DATA_PATH
@@ -39,69 +42,59 @@ def valid_data(train_main, train_std):
 
     #changing png to dcm
 
+    #id = train_df['id'].apply(lambda x: x.split('.')[0] + '.dcm')
+    #train_df['id'] = id
     id = valid_df['id'].apply(lambda x: x.split('.')[0] + '.dcm')
     valid_df['id'] = id
+    #id = test_df['id'].apply(lambda x: x.split('.')[0] + '.dcm')
+    #test_df['id'] = id
 
     valid_id = list(valid_df["id"].values)
 
     labels = valid_df.drop(columns=['id', 'subj_id'])
     labels = labels.apply(lambda x: x.to_list(), axis=1)
     num_classes = len(labels[0])
+    print(num_classes)
 
 
     bucket_name = 'lung_cancer1'
     image_size = (224, 224)
 
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
 
-    def read_dicom_from_gcs(blob_path, train_main, train_std):
+    def read_dicom_from_gcs2(path, label, mean_train, std_train):
 
-        blob = bucket.blob(blob_path)
-        dicom_bytes = blob.download_as_bytes()
-        ds = pydicom.dcmread(io.BytesIO(dicom_bytes))
-        arr = ds.pixel_array.astype(np.float32)
-        arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))  # Normalize to [0,1]
-        arr = np.stack([arr] * 3, axis=-1)  # Make 3-channel RGB
-        arr = (arr - train_main) / train_std
-        #return arr.astype(np.float32), np.array(mean, dtype=np.float32), np.array(std, dtype=np.float32)
-        return arr
+        image_bytes = tf.io.read_file(path)
+        image = tfio.image.decode_dicom_image(image_bytes, dtype=tf.uint16, scale="auto")
+        image = tf.squeeze(image, axis=0)
+        image = tf.image.resize(image, image_size)
+        image = tf.cast(image, tf.float32)
+        image = image / tf.reduce_max(image)
+        # Standardize: (x - mean) / std
+        #mean, variance = tf.nn.moments(image, axes=[0, 1])
+        #stddev = tf.sqrt(variance)
+        #mean = tf.reduce_mean(image)
+        #stddev = tf.math.reduce_std(image)
+        image = (image - mean_train) / (std_train + 1e-6)  # add epsilon for stability
+        # Expand grayscale to 3 channels if needed
+        #image = tf.expand_dims(image, -1)
+        #image = tf.image.grayscale_to_rgb(image)
 
+        return image, tf.cast(label, tf.float32)
 
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in valid_id][:5]
+    print(dicom_paths)
 
-    def load_image_tf(dicom_path, label, image_size=image_size, num_classes=num_classes):
-        def _load(path_str, label_arr):
-            image = read_dicom_from_gcs(path_str.numpy().decode('utf-8'), train_main, train_std)
-            image = tf.image.resize(image, image_size)
-            label_tensor = tf.convert_to_tensor(label_arr, dtype=tf.float32)
-            return image, label_tensor
-
-        image, label = tf.py_function(
-            func=_load,
-            inp=[dicom_path, label],
-            Tout=(tf.float32, tf.float32)
-        )
-        image.set_shape([*image_size, 3])
-        label.set_shape([num_classes])
-
-        return image, label
-
-
-
-    blobs = bucket.list_blobs(prefix='dicom/dicom')
-    dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in valid_id]
-
-    label_array = np.array(labels.tolist(), dtype=np.float32)
+    label_array = np.array(labels.tolist()[:5], dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
+    print(labels.tolist()[:5])
 
     dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
-    dataset = dataset.map(lambda path, label: load_image_tf(path, label, image_size=image_size, num_classes=num_classes), num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
+    dataset = dataset.map(read_dicom_from_gcs2, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.shuffle(1000).batch(32).prefetch(tf.data.AUTOTUNE)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"elapsed_time {elapsed_time}")
-
 
     return dataset
