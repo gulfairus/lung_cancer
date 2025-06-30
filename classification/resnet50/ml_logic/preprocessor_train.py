@@ -54,7 +54,7 @@ def train_data():
     labels = train_df.drop(columns=['id', 'subj_id'])
     labels = labels.apply(lambda x: x.to_list(), axis=1)
     num_classes = len(labels[0])
-    print(num_classes)
+    #print(num_classes)
 
 
     bucket_name = 'lung_cancer1'
@@ -103,6 +103,7 @@ def train_data():
         # Expand grayscale to 3 channels if needed
         #image = tf.expand_dims(image, -1)
         #image = tf.image.grayscale_to_rgb(image)
+        print(path)
 
         return image, tf.cast(label, tf.float32), mean, stddev
 
@@ -132,7 +133,7 @@ def train_data():
     #dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
     #dicom_paths = [f"gs://{bucket_name}/"+ blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
     dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in train_id][:10]
-    print(dicom_paths)
+    #print(dicom_paths)
 
     #print(dicom_paths)
     #for blob in dicom_paths:
@@ -164,8 +165,8 @@ def train_data():
 
 #iterator = iter(preprocess_data())
 dataset = train_data()
-iterator = iter(dataset)
-print(iterator.next())
+#iterator = iter(dataset)
+#print(iterator.next())
 for images, labels, means, stds in dataset:
     #print("Image batch shape:", images.shape)
     #print(means)
