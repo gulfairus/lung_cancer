@@ -153,7 +153,7 @@ def train_data():
     dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
     dataset = dataset.map(read_dicom_from_gcs2, num_parallel_calls=tf.data.AUTOTUNE)
     #ds_for_training = dataset.map(lambda x, y: (x, y['label']))
-    ds_for_training = ds_for_training.shuffle(1000).batch(32).prefetch(tf.data.AUTOTUNE)
+    dataset = dataset.shuffle(1000).batch(32).prefetch(tf.data.AUTOTUNE)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
