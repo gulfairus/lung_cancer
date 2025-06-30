@@ -90,7 +90,10 @@ def train_data():
         image = tf.squeeze(image, axis=0)
         image = tf.image.resize(image, image_size)
         image = tf.cast(image, tf.float32)
-        image = image / tf.reduce_max(image)
+        #image = image / tf.reduce_max(image)
+        image_min = tf.reduce_min(image)
+        image_max = tf.reduce_max(image)
+        image = (image - image_min) / (image_max - image_min + 1e-8)
         # Standardize: (x - mean) / std
         mean, variance = tf.nn.moments(image, axes=[0, 1])
         stddev = tf.sqrt(variance)
@@ -101,7 +104,7 @@ def train_data():
         #image = tf.expand_dims(image, -1)
         #image = tf.image.grayscale_to_rgb(image)
 
-        return image, tf.cast(label, tf.float32), mean, stddev, path
+        return image, tf.cast(label, tf.float32), mean, stddev
 
 
     #def load_image_tf(dicom_path, label, image_size=image_size, num_classes=num_classes):
@@ -149,7 +152,8 @@ def train_data():
 
     dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
     dataset = dataset.map(read_dicom_from_gcs2, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.shuffle(1000).batch(32).prefetch(tf.data.AUTOTUNE)
+    ds_for_training = dataset.map(lambda x, y: (x, y['label']))
+    ds_for_training = ds_for_training.shuffle(1000).batch(32).prefetch(tf.data.AUTOTUNE)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -162,7 +166,7 @@ def train_data():
 dataset = train_data()
 iterator = iter(dataset)
 print(iterator.next())
-for images, labels, means, stds, path in dataset:
+for images, labels, means, stds in dataset:
     #print("Image batch shape:", images.shape)
     #print(means)
     train_main.append(np.mean(means))
