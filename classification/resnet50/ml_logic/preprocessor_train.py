@@ -128,7 +128,7 @@ def train_data():
     #blobs = bucket.list_blobs(prefix='dicom/dicom')
     #dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
     #dicom_paths = [f"gs://{bucket_name}/"+ blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in train_id][:5]
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in train_id][:10]
     print(dicom_paths)
 
     #print(dicom_paths)
@@ -138,10 +138,10 @@ def train_data():
     #    train_std.append(std)
 
 
-    label_array = np.array(labels.tolist()[:5], dtype=np.float32)
+    label_array = np.array(labels.tolist()[:10], dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
-    print(labels.tolist()[:5])
+    #print(labels.tolist()[:5])
 
     #dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
     #dataset = dataset.map(lambda path, label: load_image_tf(path, label, image_size=image_size, num_classes=num_classes), num_parallel_calls=tf.data.AUTOTUNE)

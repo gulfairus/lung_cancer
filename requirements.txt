@@ -10,6 +10,7 @@ db-dtypes
 pyarrow
 # Trick to install the version of Tensorflow depending on your processor: darwin == Mac, ARM == M1
 tensorflow==2.15.0
+tensorflow_io==0.36.0
 # Lib for Vision Transformer (ViT)
 tensorflow_addons
 vit-keras
