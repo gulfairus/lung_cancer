@@ -13,27 +13,22 @@ import tarfile
 from tqdm import tqdm_notebook as tqdm
 #tqdm().pandas()
 import tensorflow
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+#from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import pydicom
 import cv2
 from classification.params import *
-from google.cloud import storage
+from google.cloud import storage, bigquery
 import io
 import tensorflow as tf
 import time
 import tensorflow_io as tfio
+from colorama import Fore, Style
 
 train_main = []
 train_std = []
-
+start_time = time.time()
 def train_data():
-    start_time = time.time()
 
-
-    # generate training,testing and validation batches
-    #image_dir = DICOM_DATA_PATH
-
-    #load dataframe
 
     train_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_train.csv"))
     #valid_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_val.csv"))
@@ -57,7 +52,7 @@ def train_data():
     #print(num_classes)
 
 
-    bucket_name = 'lung_cancer1'
+    bucket_name = BUCKET_NAME
     image_size = (224, 224)
 
     #client = storage.Client()
@@ -95,17 +90,19 @@ def train_data():
         image_max = tf.reduce_max(image)
         image = (image - image_min) / (image_max - image_min + 1e-8)
         # Standardize: (x - mean) / std
-        mean, variance = tf.nn.moments(image, axes=[0, 1])
-        stddev = tf.sqrt(variance)
+        #mean, variance = tf.nn.moments(image, axes=[0, 1])
+        #stddev = tf.sqrt(variance)
+        mean = MEAN_TRAIN
+        stddev = STD_TRAIN
         #mean = tf.reduce_mean(image)
         #stddev = tf.math.reduce_std(image)
         image = (image - mean) / (stddev + 1e-6)  # add epsilon for stability
         # Expand grayscale to 3 channels if needed
         #image = tf.expand_dims(image, -1)
         #image = tf.image.grayscale_to_rgb(image)
-        print(path)
 
-        return image, tf.cast(label, tf.float32), mean, stddev
+        #return image, tf.cast(label, tf.float32), mean, stddev
+        return image, tf.cast(label, tf.float32), tf.cast(path, tf.string)
 
 
     #def load_image_tf(dicom_path, label, image_size=image_size, num_classes=num_classes):
@@ -132,7 +129,7 @@ def train_data():
     #blobs = bucket.list_blobs(prefix='dicom/dicom')
     #dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
     #dicom_paths = [f"gs://{bucket_name}/"+ blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in train_id]
+    dicom_paths = [f"gs://{BUCKET_NAME}/dicom/dicom/"+ id for id in train_id]
     #print(dicom_paths)
 
     #print(dicom_paths)
@@ -156,24 +153,70 @@ def train_data():
     #ds_for_training = dataset.map(lambda x, y: (x, y['label']))
     dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"elapsed_time {elapsed_time}")
+#    end_time = time.time()
+#    elapsed_time = end_time - start_time
+#    print(f"elapsed_time {elapsed_time}")
 
 
     return dataset
 
 #iterator = iter(preprocess_data())
 dataset = train_data()
+for img, lbl, id in dataset:
+    images = img
+    labels = lbl
+    ids = id
+#print(images, labels, ids)
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"elapsed_time {elapsed_time}")
 #iterator = iter(dataset)
 #print(iterator.next())
-for images, labels, means, stds in dataset:
-    #print("Image batch shape:", images.shape)
-    #print(means)
-    train_main.append(np.mean(means))
-    train_std.append(np.mean(stds))
 
-mean_train = np.mean(train_main)
-std_train = np.mean(train_std)
+def serialize_batch(images, labels, id):
+    # Flatten the 4D tensor to 1D byte string
+    images_bytes = tf.io.serialize_tensor(images)
+    labels_bytes = tf.io.serialize_tensor(labels)
+    id_bytes = tf.io.serialize_tensor(id)
 
-print(mean_train, std_train)
+    features = {
+        'images': tf.train.Feature(bytes_list=tf.train.BytesList(value=[images_bytes.numpy()])),
+        'labels': tf.train.Feature(bytes_list=tf.train.BytesList(value=[labels_bytes.numpy()])),
+        'id': tf.train.Feature(bytes_list=tf.train.BytesList(value=[id_bytes.numpy()])),
+    }
+
+    example = tf.train.Example(features=tf.train.Features(feature=features))
+    return example.SerializeToString()
+
+output = f"gs://{BUCKET_NAME}/dicom/preprocessed_data1.tfrecord"
+
+with tf.io.TFRecordWriter(output) as writer:
+    for images, labels, id in dataset:
+        serialized = serialize_batch(images, labels, id)
+        writer.write(serialized)
+
+def parse_tfrecord(example_proto):
+    features = {
+        'images': tf.io.FixedLenFeature([], tf.string),
+        'labels': tf.io.FixedLenFeature([], tf.string),
+        'id': tf.io.FixedLenFeature([], tf.string),
+    }
+    parsed = tf.io.parse_single_example(example_proto, features)
+    images = tf.io.parse_tensor(parsed['images'], out_type=tf.float32)
+    labels = tf.io.parse_tensor(parsed['labels'], out_type=tf.float32)
+    id = tf.io.parse_tensor(parsed['id'], out_type=tf.string)
+    return images, labels, id
+
+# Load dataset back from GCS
+#reloaded_ds = tf.data.TFRecordDataset(output)
+#reloaded_ds = reloaded_ds.map(parse_tfrecord)
+
+#for img, lbl, id in reloaded_ds:
+ #   images = img
+#    labels = lbl
+#    ids = id
+#print(images, labels, ids)
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"elapsed_time {elapsed_time}")

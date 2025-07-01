@@ -74,7 +74,7 @@ def test_data(mean_train, std_train):
         #stddev = tf.sqrt(variance)
         #mean = tf.reduce_mean(image)
         #stddev = tf.math.reduce_std(image)
-        image = (image - mean_train) / (std_train + 1e-6)  # add epsilon for stability
+        image = (image - MEAN_TRAIN) / (STD_TRAIN + 1e-6)  # add epsilon for stability
         # Expand grayscale to 3 channels if needed
         #image = tf.expand_dims(image, -1)
         #image = tf.image.grayscale_to_rgb(image)

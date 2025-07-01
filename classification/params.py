@@ -37,6 +37,8 @@ TEST_DATA_PATH = "/home/user/code/gulfairus/Covid19/raw_data/cloud/train_test/te
 #TRAIN_NORM_PATH = "/home/user/code/gulfairus/Covid19/raw_data/cloud/train_test/train_val/train_val_norm"
 #TRAIN_OTHER_PATH = "/home/user/code/gulfairus/Covid19/raw_data/cloud/train_test/train_val/train"
 VAL_DATA_PATH = "/home/user/code/gulfairus/Covid19/raw_data/cloud/train_test/train_val/val"
+MEAN_TRAIN = 0.53306305
+STD_TRAIN = 0.24305601
 
 TF_ENABLE_ONEDNN_OPTS = os.environ.get("TF_ENABLE_ONEDNN_OPTS")
 
