@@ -52,8 +52,10 @@ def train_data():
     #print(num_classes)
 
 
-    bucket_name = BUCKET_NAME
+    BUCKET_NAME = "lung_cancer1"
     image_size = (224, 224)
+    MEAN_TRAIN = 0.53306305
+    STD_TRAIN = 0.24305601
 
     #client = storage.Client()
     #bucket = client.bucket(bucket_name)
