@@ -172,6 +172,9 @@ for img, lbl in dataset:
     images = img
     labels = lbl
 
+np.save('/home/gulfairus/.database/lung_cancer/data/processed/train_dicom.npy', images)
+np.save('/home/gulfairus/.database/lung_cancer/data/processed/train_label.npy', labels)
+
 #print(images, labels, ids)
 end_time = time.time()
 elapsed_time = end_time - start_time
@@ -194,12 +197,12 @@ def serialize_batch(images, labels):
     example = tf.train.Example(features=tf.train.Features(feature=features))
     return example.SerializeToString()
 
-output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
+#output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
 
-with tf.io.TFRecordWriter(output) as writer:
-    for images, labels in dataset:
-        serialized = serialize_batch(images, labels)
-        writer.write(serialized)
+#with tf.io.TFRecordWriter(output) as writer:
+#    for images, labels in dataset:
+#        serialized = serialize_batch(images, labels)
+#        writer.write(serialized)
 
 def parse_tfrecord(example_proto):
     features = {
