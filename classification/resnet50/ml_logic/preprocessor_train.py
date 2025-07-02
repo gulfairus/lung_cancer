@@ -26,10 +26,11 @@ from colorama import Fore, Style
 
 train_main = []
 train_std = []
-start_time = time.time()
+#start_time = time.time()
 bucket_name = "lung_cancer1"
 
 def train_data():
+    start_time = time.time()
 
 
     train_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_train.csv"))
@@ -159,9 +160,9 @@ def train_data():
     #ds_for_training = dataset.map(lambda x, y: (x, y['label']))
     dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
-#    end_time = time.time()
-#    elapsed_time = end_time - start_time
-#    print(f"elapsed_time {elapsed_time}")
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"elapsed_time {elapsed_time}")
 
 
     return dataset
@@ -176,9 +177,9 @@ np.save('/home/gulfairus/.database/lung_cancer/data/processed/train_dicom.npy', 
 np.save('/home/gulfairus/.database/lung_cancer/data/processed/train_label.npy', labels)
 
 #print(images, labels, ids)
-end_time = time.time()
-elapsed_time = end_time - start_time
-print(f"elapsed_time {elapsed_time}")
+#end_time = time.time()
+#elapsed_time = end_time - start_time
+#print(f"elapsed_time {elapsed_time}")
 #iterator = iter(dataset)
 #print(iterator.next())
 
@@ -225,7 +226,3 @@ def parse_tfrecord(example_proto):
 #    labels = lbl
 #    ids = id
 #print(images, labels, ids)
-
-end_time = time.time()
-elapsed_time = end_time - start_time
-print(f"elapsed_time {elapsed_time}")
