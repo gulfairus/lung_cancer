@@ -136,7 +136,7 @@ def train_data():
     #blobs = bucket.list_blobs(prefix='dicom/dicom')
     #dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
     #dicom_paths = [f"gs://{bucket_name}/"+ blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in train_id][:5]
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in train_id]
     #print(dicom_paths)
 
     #print(dicom_paths)
@@ -146,7 +146,7 @@ def train_data():
     #    train_std.append(std)
 
 
-    label_array = np.array(labels.tolist()[:5], dtype=np.float32)
+    label_array = np.array(labels.tolist(), dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
     #print(labels.tolist()[:5])
@@ -176,27 +176,27 @@ for img, lbl in dataset:
 np.save('/home/gulfairus/.database/lung_cancer/data/processed/train_dicom.npy', images)
 np.save('/home/gulfairus/.database/lung_cancer/data/processed/train_label.npy', labels)
 
-#print(images, labels, ids)
-#end_time = time.time()
-#elapsed_time = end_time - start_time
-#print(f"elapsed_time {elapsed_time}")
+#images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/train_dicom.npy')
+
+print(f"✅ Data saved locally")
+
 #iterator = iter(dataset)
 #print(iterator.next())
 
-def serialize_batch(images, labels):
-    # Flatten the 4D tensor to 1D byte string
-    images_bytes = tf.io.serialize_tensor(images)
-    labels_bytes = tf.io.serialize_tensor(labels)
-    #id_bytes = tf.io.serialize_tensor(id)
+#def serialize_batch(images, labels):
+#    # Flatten the 4D tensor to 1D byte string
+#    images_bytes = tf.io.serialize_tensor(images)
+#    labels_bytes = tf.io.serialize_tensor(labels)
+#    #id_bytes = tf.io.serialize_tensor(id)
 
-    features = {
-        'images': tf.train.Feature(bytes_list=tf.train.BytesList(value=[images_bytes.numpy()])),
-        'labels': tf.train.Feature(bytes_list=tf.train.BytesList(value=[labels_bytes.numpy()])),
-        #'id': tf.train.Feature(bytes_list=tf.train.BytesList(value=[id_bytes.numpy()])),
-    }
+#    features = {
+#        'images': tf.train.Feature(bytes_list=tf.train.BytesList(value=[images_bytes.numpy()])),
+#        'labels': tf.train.Feature(bytes_list=tf.train.BytesList(value=[labels_bytes.numpy()])),
+#        #'id': tf.train.Feature(bytes_list=tf.train.BytesList(value=[id_bytes.numpy()])),
+#    }
 
-    example = tf.train.Example(features=tf.train.Features(feature=features))
-    return example.SerializeToString()
+#    example = tf.train.Example(features=tf.train.Features(feature=features))
+#    return example.SerializeToString()
 
 #output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
 
@@ -205,17 +205,17 @@ def serialize_batch(images, labels):
 #        serialized = serialize_batch(images, labels)
 #        writer.write(serialized)
 
-def parse_tfrecord(example_proto):
-    features = {
-        'images': tf.io.FixedLenFeature([], tf.string),
-        'labels': tf.io.FixedLenFeature([], tf.string),
-        #'id': tf.io.FixedLenFeature([], tf.string),
-    }
-    parsed = tf.io.parse_single_example(example_proto, features)
-    images = tf.io.parse_tensor(parsed['images'], out_type=tf.float32)
-    labels = tf.io.parse_tensor(parsed['labels'], out_type=tf.float32)
-    #id = tf.io.parse_tensor(parsed['id'], out_type=tf.string)
-    return images, labels
+#def parse_tfrecord(example_proto):
+#    features = {
+#        'images': tf.io.FixedLenFeature([], tf.string),
+#        'labels': tf.io.FixedLenFeature([], tf.string),
+#        #'id': tf.io.FixedLenFeature([], tf.string),
+#    }
+#    parsed = tf.io.parse_single_example(example_proto, features)
+#    images = tf.io.parse_tensor(parsed['images'], out_type=tf.float32)
+#    labels = tf.io.parse_tensor(parsed['labels'], out_type=tf.float32)
+#    #id = tf.io.parse_tensor(parsed['id'], out_type=tf.string)
+#    return images, labels
 
 # Load dataset back from GCS
 #reloaded_ds = tf.data.TFRecordDataset(output)
