@@ -23,11 +23,10 @@ import tensorflow as tf
 import time
 import tensorflow_io as tfio
 
-train_main = []
-train_std = []
+start_time = time.time()
 
-def valid_data(mean_train, std_train):
-    start_time = time.time()
+def valid_data():
+
 
 
     # generate training,testing and validation batches
@@ -54,14 +53,16 @@ def valid_data(mean_train, std_train):
     labels = valid_df.drop(columns=['id', 'subj_id'])
     labels = labels.apply(lambda x: x.to_list(), axis=1)
     num_classes = len(labels[0])
-    print(num_classes)
+    #print(num_classes)
 
 
     bucket_name = 'lung_cancer1'
     image_size = (224, 224)
+    MEAN_TRAIN = 0.53306305
+    STD_TRAIN = 0.24305601
 
 
-    def read_dicom_from_gcs2(path, label, mean_train, std_train):
+    def read_dicom_from_gcs2(path, label):
 
         image_bytes = tf.io.read_file(path)
         image = tfio.image.decode_dicom_image(image_bytes, dtype=tf.uint16, scale="auto")
@@ -81,13 +82,13 @@ def valid_data(mean_train, std_train):
 
         return image, tf.cast(label, tf.float32)
 
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in valid_id][:5]
-    print(dicom_paths)
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in valid_id]
+    #print(dicom_paths)
 
-    label_array = np.array(labels.tolist()[:5], dtype=np.float32)
+    label_array = np.array(labels.tolist(), dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
-    print(labels.tolist()[:5])
+    #print(labels.tolist()[:5])
 
     dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
     dataset = dataset.map(read_dicom_from_gcs2, num_parallel_calls=tf.data.AUTOTUNE)
@@ -98,3 +99,30 @@ def valid_data(mean_train, std_train):
     print(f"elapsed_time {elapsed_time}")
 
     return dataset
+
+
+dataset = valid_data()
+for img, lbl in dataset:
+    images = img
+    labels = lbl
+
+np.save('/home/gulfairus/.database/lung_cancer/data/processed/valid_dicom.npy', images)
+np.save('/home/gulfairus/.database/lung_cancer/data/processed/valid_label.npy', labels)
+
+#images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/train_dicom.npy')
+end_time = time.time()
+elapsed_time = end_time - start_time
+
+print(f"elapsed_time {elapsed_time}")
+print(f"✅ Data saved locally")
+
+def load_data():
+    images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/valid_dicom.npy')
+    labels = np.load('/home/gulfairus/.database/lung_cancer/data/processed/valid_label.npy')
+
+
+    return images, labels
+
+images, labels = load_data()
+print(images.shape)
+print(labels.shape)
