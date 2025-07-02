@@ -27,6 +27,8 @@ from colorama import Fore, Style
 train_main = []
 train_std = []
 start_time = time.time()
+bucket_name = "lung_cancer1"
+
 def train_data():
 
 
@@ -52,7 +54,7 @@ def train_data():
     #print(num_classes)
 
 
-    BUCKET_NAME = "lung_cancer1"
+    bucket_name = "lung_cancer1"
     image_size = (224, 224)
     MEAN_TRAIN = 0.53306305
     STD_TRAIN = 0.24305601
@@ -131,7 +133,7 @@ def train_data():
     #blobs = bucket.list_blobs(prefix='dicom/dicom')
     #dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
     #dicom_paths = [f"gs://{bucket_name}/"+ blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
-    dicom_paths = [f"gs://{BUCKET_NAME}/dicom/dicom/"+ id for id in train_id][:10]
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in train_id][:10]
     #print(dicom_paths)
 
     #print(dicom_paths)
@@ -190,7 +192,7 @@ def serialize_batch(images, labels, id):
     example = tf.train.Example(features=tf.train.Features(feature=features))
     return example.SerializeToString()
 
-output = f"gs://{BUCKET_NAME}/dicom/preprocessed_data1.tfrecord"
+output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
 
 with tf.io.TFRecordWriter(output) as writer:
     for images, labels, id in dataset:
