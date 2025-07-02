@@ -28,7 +28,7 @@ train_std = []
 start_time = time.time()
 
 def test_data():
-    start_time = time.time()
+
 
     # generate training,testing and validation batches
     #image_dir = DICOM_DATA_PATH
@@ -83,10 +83,10 @@ def test_data():
 
         return image, tf.cast(label, tf.float32)
 
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in test_id][:10]
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in test_id]
     #print(dicom_paths)
 
-    label_array = np.array(labels.tolist()[:10], dtype=np.float32)
+    label_array = np.array(labels.tolist(), dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
     #print(labels.tolist()[:5])
@@ -94,10 +94,6 @@ def test_data():
     dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
     dataset = dataset.map(read_dicom_from_gcs2, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"elapsed_time {elapsed_time}")
 
     return dataset
 
