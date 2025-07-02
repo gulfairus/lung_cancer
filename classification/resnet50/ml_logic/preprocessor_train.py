@@ -105,10 +105,10 @@ def train_data():
         #image = tf.expand_dims(image, -1)
         #image = tf.image.grayscale_to_rgb(image)
         img = tf.cast(path, tf.string)
-        print(img)
+        #print(img)
 
         #return image, tf.cast(label, tf.float32), mean, stddev
-        return image, tf.cast(label, tf.float32), img
+        return image, tf.cast(label, tf.float32)
 
 
     #def load_image_tf(dicom_path, label, image_size=image_size, num_classes=num_classes):
@@ -168,10 +168,10 @@ def train_data():
 
 #iterator = iter(preprocess_data())
 dataset = train_data()
-for img, lbl, id in dataset:
+for img, lbl in dataset:
     images = img
     labels = lbl
-    ids = id
+
 #print(images, labels, ids)
 end_time = time.time()
 elapsed_time = end_time - start_time
@@ -179,16 +179,16 @@ print(f"elapsed_time {elapsed_time}")
 #iterator = iter(dataset)
 #print(iterator.next())
 
-def serialize_batch(images, labels, id):
+def serialize_batch(images, labels):
     # Flatten the 4D tensor to 1D byte string
     images_bytes = tf.io.serialize_tensor(images)
     labels_bytes = tf.io.serialize_tensor(labels)
-    id_bytes = tf.io.serialize_tensor(id)
+    #id_bytes = tf.io.serialize_tensor(id)
 
     features = {
         'images': tf.train.Feature(bytes_list=tf.train.BytesList(value=[images_bytes.numpy()])),
         'labels': tf.train.Feature(bytes_list=tf.train.BytesList(value=[labels_bytes.numpy()])),
-        'id': tf.train.Feature(bytes_list=tf.train.BytesList(value=[id_bytes.numpy()])),
+        #'id': tf.train.Feature(bytes_list=tf.train.BytesList(value=[id_bytes.numpy()])),
     }
 
     example = tf.train.Example(features=tf.train.Features(feature=features))
@@ -197,21 +197,21 @@ def serialize_batch(images, labels, id):
 output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
 
 with tf.io.TFRecordWriter(output) as writer:
-    for images, labels, id in dataset:
-        serialized = serialize_batch(images, labels, id)
+    for images, labels in dataset:
+        serialized = serialize_batch(images, labels)
         writer.write(serialized)
 
 def parse_tfrecord(example_proto):
     features = {
         'images': tf.io.FixedLenFeature([], tf.string),
         'labels': tf.io.FixedLenFeature([], tf.string),
-        'id': tf.io.FixedLenFeature([], tf.string),
+        #'id': tf.io.FixedLenFeature([], tf.string),
     }
     parsed = tf.io.parse_single_example(example_proto, features)
     images = tf.io.parse_tensor(parsed['images'], out_type=tf.float32)
     labels = tf.io.parse_tensor(parsed['labels'], out_type=tf.float32)
-    id = tf.io.parse_tensor(parsed['id'], out_type=tf.string)
-    return images, labels, id
+    #id = tf.io.parse_tensor(parsed['id'], out_type=tf.string)
+    return images, labels
 
 # Load dataset back from GCS
 #reloaded_ds = tf.data.TFRecordDataset(output)
