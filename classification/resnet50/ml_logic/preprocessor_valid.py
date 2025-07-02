@@ -106,6 +106,9 @@ for img, lbl in dataset:
     images = img
     labels = lbl
 
+print(images.shape)
+print(labels.shape)
+
 np.save('/home/gulfairus/.database/lung_cancer/data/processed/valid_dicom.npy', images)
 np.save('/home/gulfairus/.database/lung_cancer/data/processed/valid_label.npy', labels)
 

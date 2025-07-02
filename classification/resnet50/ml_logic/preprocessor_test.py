@@ -25,10 +25,10 @@ import tensorflow_io as tfio
 
 train_main = []
 train_std = []
+start_time = time.time()
 
-def test_data(mean_train, std_train):
+def test_data():
     start_time = time.time()
-
 
     # generate training,testing and validation batches
     #image_dir = DICOM_DATA_PATH
@@ -38,7 +38,7 @@ def test_data(mean_train, std_train):
     #train_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_train.csv"))
     #valid_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_val.csv"))
     test_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_test.csv"))
-    print(f"valid_df {test_df.shape}")
+    print(f"test_df {test_df.shape}")
 
     #changing png to dcm
 
@@ -54,11 +54,13 @@ def test_data(mean_train, std_train):
     labels = test_df.drop(columns=['id', 'subj_id'])
     labels = labels.apply(lambda x: x.to_list(), axis=1)
     num_classes = len(labels[0])
-    print(num_classes)
+    #print(num_classes)
 
 
     bucket_name = 'lung_cancer1'
     image_size = (224, 224)
+    MEAN_TRAIN = 0.53306305
+    STD_TRAIN = 0.24305601
 
 
     def read_dicom_from_gcs2(path, label):
@@ -81,20 +83,49 @@ def test_data(mean_train, std_train):
 
         return image, tf.cast(label, tf.float32)
 
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in test_id][:5]
-    print(dicom_paths)
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in test_id][:10]
+    #print(dicom_paths)
 
-    label_array = np.array(labels.tolist()[:5], dtype=np.float32)
+    label_array = np.array(labels.tolist()[:10], dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
-    print(labels.tolist()[:5])
+    #print(labels.tolist()[:5])
 
     dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
     dataset = dataset.map(read_dicom_from_gcs2, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.shuffle(1000).batch(32).prefetch(tf.data.AUTOTUNE)
+    dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"elapsed_time {elapsed_time}")
 
     return dataset
+
+dataset = test_data()
+for img, lbl in dataset:
+    images = img
+    labels = lbl
+
+print(images.shape)
+print(labels.shape)
+
+np.save('/home/gulfairus/.database/lung_cancer/data/processed/test_dicom.npy', images)
+np.save('/home/gulfairus/.database/lung_cancer/data/processed/test_label.npy', labels)
+
+#images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/train_dicom.npy')
+end_time = time.time()
+elapsed_time = end_time - start_time
+
+print(f"elapsed_time {elapsed_time}")
+print(f"✅ Data saved locally")
+
+def load_data():
+    images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/test_dicom.npy')
+    labels = np.load('/home/gulfairus/.database/lung_cancer/data/processed/test_label.npy')
+
+
+    return images, labels
+
+images, labels = load_data()
+print(images.shape)
+print(labels.shape)
