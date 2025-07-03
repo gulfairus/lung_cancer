@@ -82,10 +82,10 @@ def valid_data():
 
         return image, tf.cast(label, tf.float32)
 
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in valid_id]
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in valid_id][:3]
     #print(dicom_paths)
 
-    label_array = np.array(labels.tolist(), dtype=np.float32)
+    label_array = np.array(labels.tolist()[:3], dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
     #print(labels.tolist()[:5])
@@ -102,30 +102,85 @@ def valid_data():
 
 
 dataset = valid_data()
+
+iterator = iter(dataset)
+print(iterator.next())
+
+""" valid_dicom = []
+valid_label = []
+
+
 for img, lbl in dataset:
-    images = img
-    labels = lbl
+    valid_dicom.append(img)
+    valid_label.append(lbl)
 
-print(images.shape)
-print(labels.shape)
+valid_dicom_tensor = tf.stack(valid_dicom)
+valid_label_tensor = tf.stack(valid_label)
+print(valid_dicom_tensor.shape)
+print(valid_label_tensor.shape)
+print(valid_label_tensor) """
 
-np.save('/home/gulfairus/.database/lung_cancer/data/processed/valid_dicom.npy', images)
-np.save('/home/gulfairus/.database/lung_cancer/data/processed/valid_label.npy', labels)
+# np.save('/home/gulfairus/.database/lung_cancer/data/processed/valid_dicom.npy', valid_dicom_tensor)
+# np.save('/home/gulfairus/.database/lung_cancer/data/processed/valid_label.npy', valid_label_tensor)
 
-#images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/train_dicom.npy')
-end_time = time.time()
-elapsed_time = end_time - start_time
+# #images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/train_dicom.npy')
+# print(f"✅ Data saved locally")
+# end_time = time.time()
+# elapsed_time = end_time - start_time
 
-print(f"elapsed_time {elapsed_time}")
-print(f"✅ Data saved locally")
+# print(f"elapsed_time {elapsed_time}")
 
-def load_data():
-    images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/valid_dicom.npy')
-    labels = np.load('/home/gulfairus/.database/lung_cancer/data/processed/valid_label.npy')
+# def load_data():
+#     images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/valid_dicom.npy')
+#     labels = np.load('/home/gulfairus/.database/lung_cancer/data/processed/valid_label.npy')
 
 
+#     return images, labels
+
+# images, labels = load_data()
+# print(f"✅ Data loaded from local")
+# print(images.shape)
+# print(labels.shape)
+
+def serialize_batch(images, labels):
+    # Flatten the 4D tensor to 1D byte string
+    images_bytes = tf.io.serialize_tensor(images)
+    labels_bytes = tf.io.serialize_tensor(labels)
+    #id_bytes = tf.io.serialize_tensor(id)
+
+    features = {
+        'images': tf.train.Feature(bytes_list=tf.train.BytesList(value=[images_bytes.numpy()])),
+        'labels': tf.train.Feature(bytes_list=tf.train.BytesList(value=[labels_bytes.numpy()])),
+        #'id': tf.train.Feature(bytes_list=tf.train.BytesList(value=[id_bytes.numpy()])),
+    }
+
+    example = tf.train.Example(features=tf.train.Features(feature=features))
+    return example.SerializeToString()
+
+#output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
+output = '/home/gulfairus/.database/lung_cancer/data/processed/valid_data.tfrecord'
+
+with tf.io.TFRecordWriter(output) as writer:
+    for images, labels in dataset:
+        serialized = serialize_batch(images, labels)
+        writer.write(serialized)
+print(f"✅ Data saved successfully")
+
+def parse_tfrecord(example_proto):
+    features = {
+        'images': tf.io.FixedLenFeature([], tf.string),
+        'labels': tf.io.FixedLenFeature([], tf.string),
+        #'id': tf.io.FixedLenFeature([], tf.string),
+    }
+    parsed = tf.io.parse_single_example(example_proto, features)
+    images = tf.io.parse_tensor(parsed['images'], out_type=tf.float32)
+    labels = tf.io.parse_tensor(parsed['labels'], out_type=tf.float32)
+    #id = tf.io.parse_tensor(parsed['id'], out_type=tf.string)
     return images, labels
 
-images, labels = load_data()
-print(images.shape)
-print(labels.shape)
+# Load dataset back
+reloaded_ds = tf.data.TFRecordDataset(output)
+reloaded_ds = reloaded_ds.map(parse_tfrecord)
+
+iterator = iter(reloaded_ds)
+print(iterator.next())

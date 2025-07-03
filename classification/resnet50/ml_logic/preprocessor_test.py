@@ -83,10 +83,10 @@ def test_data():
 
         return image, tf.cast(label, tf.float32)
 
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in test_id]
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in test_id][:100]
     #print(dicom_paths)
 
-    label_array = np.array(labels.tolist(), dtype=np.float32)
+    label_array = np.array(labels.tolist()[:100], dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
     #print(labels.tolist()[:5])
