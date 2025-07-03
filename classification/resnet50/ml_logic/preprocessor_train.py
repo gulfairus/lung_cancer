@@ -169,6 +169,8 @@ def train_data():
 
 #iterator = iter(preprocess_data())
 dataset = train_data()
+
+'''
 for img, lbl in dataset:
     images = img
     labels = lbl
@@ -183,46 +185,28 @@ print(f"✅ Data saved locally")
 #iterator = iter(dataset)
 #print(iterator.next())
 
-#def serialize_batch(images, labels):
-#    # Flatten the 4D tensor to 1D byte string
-#    images_bytes = tf.io.serialize_tensor(images)
-#    labels_bytes = tf.io.serialize_tensor(labels)
-#    #id_bytes = tf.io.serialize_tensor(id)
+'''
 
-#    features = {
-#        'images': tf.train.Feature(bytes_list=tf.train.BytesList(value=[images_bytes.numpy()])),
-#        'labels': tf.train.Feature(bytes_list=tf.train.BytesList(value=[labels_bytes.numpy()])),
-#        #'id': tf.train.Feature(bytes_list=tf.train.BytesList(value=[id_bytes.numpy()])),
-#    }
+def serialize_batch(images, labels):
+    # Flatten the 4D tensor to 1D byte string
+    images_bytes = tf.io.serialize_tensor(images)
+    labels_bytes = tf.io.serialize_tensor(labels)
+    #id_bytes = tf.io.serialize_tensor(id)
 
-#    example = tf.train.Example(features=tf.train.Features(feature=features))
-#    return example.SerializeToString()
+    features = {
+        'images': tf.train.Feature(bytes_list=tf.train.BytesList(value=[images_bytes.numpy()])),
+        'labels': tf.train.Feature(bytes_list=tf.train.BytesList(value=[labels_bytes.numpy()])),
+        #'id': tf.train.Feature(bytes_list=tf.train.BytesList(value=[id_bytes.numpy()])),
+    }
+
+    example = tf.train.Example(features=tf.train.Features(feature=features))
+    return example.SerializeToString()
 
 #output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
+output = '/home/gulfairus/.database/lung_cancer/data/processed/train_dataset.tfrecord'
 
-#with tf.io.TFRecordWriter(output) as writer:
-#    for images, labels in dataset:
-#        serialized = serialize_batch(images, labels)
-#        writer.write(serialized)
-
-#def parse_tfrecord(example_proto):
-#    features = {
-#        'images': tf.io.FixedLenFeature([], tf.string),
-#        'labels': tf.io.FixedLenFeature([], tf.string),
-#        #'id': tf.io.FixedLenFeature([], tf.string),
-#    }
-#    parsed = tf.io.parse_single_example(example_proto, features)
-#    images = tf.io.parse_tensor(parsed['images'], out_type=tf.float32)
-#    labels = tf.io.parse_tensor(parsed['labels'], out_type=tf.float32)
-#    #id = tf.io.parse_tensor(parsed['id'], out_type=tf.string)
-#    return images, labels
-
-# Load dataset back from GCS
-#reloaded_ds = tf.data.TFRecordDataset(output)
-#reloaded_ds = reloaded_ds.map(parse_tfrecord)
-
-#for img, lbl, id in reloaded_ds:
- #   images = img
-#    labels = lbl
-#    ids = id
-#print(images, labels, ids)
+with tf.io.TFRecordWriter(output) as writer:
+    for images, labels in dataset:
+        serialized = serialize_batch(images, labels)
+        writer.write(serialized)
+print(f"✅ Data saved successfully")
