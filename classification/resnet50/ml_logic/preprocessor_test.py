@@ -23,8 +23,7 @@ import tensorflow as tf
 import time
 import tensorflow_io as tfio
 
-train_main = []
-train_std = []
+
 start_time = time.time()
 
 def test_data():
@@ -83,10 +82,10 @@ def test_data():
 
         return image, tf.cast(label, tf.float32)
 
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in test_id][:100]
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in test_id]
     #print(dicom_paths)
 
-    label_array = np.array(labels.tolist()[:100], dtype=np.float32)
+    label_array = np.array(labels.tolist(), dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
     #print(labels.tolist()[:5])
@@ -98,30 +97,29 @@ def test_data():
     return dataset
 
 dataset = test_data()
-for img, lbl in dataset:
-    images = img
-    labels = lbl
+def serialize_batch(images, labels):
+    # Flatten the 4D tensor to 1D byte string
+    images_bytes = tf.io.serialize_tensor(images)
+    labels_bytes = tf.io.serialize_tensor(labels)
+    #id_bytes = tf.io.serialize_tensor(id)
 
-print(images.shape)
-print(labels.shape)
+    features = {
+        'images': tf.train.Feature(bytes_list=tf.train.BytesList(value=[images_bytes.numpy()])),
+        'labels': tf.train.Feature(bytes_list=tf.train.BytesList(value=[labels_bytes.numpy()])),
+        #'id': tf.train.Feature(bytes_list=tf.train.BytesList(value=[id_bytes.numpy()])),
+    }
 
-np.save('/home/gulfairus/.database/lung_cancer/data/processed/test_dicom.npy', images)
-np.save('/home/gulfairus/.database/lung_cancer/data/processed/test_label.npy', labels)
+    example = tf.train.Example(features=tf.train.Features(feature=features))
+    return example.SerializeToString()
 
-#images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/train_dicom.npy')
+#output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
+output = '/home/gulfairus/.database/lung_cancer/data/processed/test_dataset.tfrecord'
+
+with tf.io.TFRecordWriter(output) as writer:
+    for images, labels in dataset:
+        serialized = serialize_batch(images, labels)
+        writer.write(serialized)
+print(f"✅ Data saved successfully")
 end_time = time.time()
 elapsed_time = end_time - start_time
-
 print(f"elapsed_time {elapsed_time}")
-print(f"✅ Data saved locally")
-
-def load_data():
-    images = np.load('/home/gulfairus/.database/lung_cancer/data/processed/test_dicom.npy')
-    labels = np.load('/home/gulfairus/.database/lung_cancer/data/processed/test_label.npy')
-
-
-    return images, labels
-
-images, labels = load_data()
-print(images.shape)
-print(labels.shape)
