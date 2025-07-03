@@ -82,10 +82,10 @@ def valid_data():
 
         return image, tf.cast(label, tf.float32)
 
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in valid_id][:3]
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in valid_id]
     #print(dicom_paths)
 
-    label_array = np.array(labels.tolist()[:3], dtype=np.float32)
+    label_array = np.array(labels.tolist(), dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
     #print(labels.tolist()[:5])
@@ -103,10 +103,11 @@ def valid_data():
 
 dataset = valid_data()
 
+"""
 iterator = iter(dataset)
 print(iterator.next())
 
-""" valid_dicom = []
+ valid_dicom = []
 valid_label = []
 
 
@@ -158,7 +159,7 @@ def serialize_batch(images, labels):
     return example.SerializeToString()
 
 #output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
-output = '/home/gulfairus/.database/lung_cancer/data/processed/valid_data.tfrecord'
+output = '/home/gulfairus/.database/lung_cancer/data/processed/valid_dataset.tfrecord'
 
 with tf.io.TFRecordWriter(output) as writer:
     for images, labels in dataset:
@@ -166,6 +167,7 @@ with tf.io.TFRecordWriter(output) as writer:
         writer.write(serialized)
 print(f"✅ Data saved successfully")
 
+'''
 def parse_tfrecord(example_proto):
     features = {
         'images': tf.io.FixedLenFeature([], tf.string),
@@ -178,9 +180,11 @@ def parse_tfrecord(example_proto):
     #id = tf.io.parse_tensor(parsed['id'], out_type=tf.string)
     return images, labels
 
+
 # Load dataset back
 reloaded_ds = tf.data.TFRecordDataset(output)
 reloaded_ds = reloaded_ds.map(parse_tfrecord)
 
 iterator = iter(reloaded_ds)
 print(iterator.next())
+'''
