@@ -92,7 +92,7 @@ def test_data():
 
     dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
     dataset = dataset.map(read_dicom_from_gcs2, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
+    #dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
     return dataset
 
@@ -113,7 +113,7 @@ def serialize_batch(images, labels):
     return example.SerializeToString()
 
 #output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
-output = '/home/gulfairus/.database/lung_cancer/data/processed/test_dataset.tfrecord'
+output = '/home/gulfairus/.database/lung_cancer/data/processed/test_dataset2.tfrecord'
 
 with tf.io.TFRecordWriter(output) as writer:
     for images, labels in dataset:
