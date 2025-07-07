@@ -92,7 +92,7 @@ def valid_data():
 
     dataset = tf.data.Dataset.from_tensor_slices((dicom_paths, label_tensor))
     dataset = dataset.map(read_dicom_from_gcs2, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
+    #dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
     end_time = time.time()
     elapsed_time = end_time - start_time
@@ -103,10 +103,16 @@ def valid_data():
 
 dataset = valid_data()
 
-"""
-iterator = iter(dataset)
-print(iterator.next())
 
+
+#iterator = iter(dataset)
+#print(dataset)
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"elapsed_time {elapsed_time}")
+
+"""
  valid_dicom = []
 valid_label = []
 
@@ -158,14 +164,20 @@ def serialize_batch(images, labels):
     example = tf.train.Example(features=tf.train.Features(feature=features))
     return example.SerializeToString()
 
-#output = f"gs://{bucket_name}/dicom/preprocessed_data1.tfrecord"
-output = '/home/gulfairus/.database/lung_cancer/data/processed/valid_dataset.tfrecord'
+#output = "gs://lung_cancer1/dicom/valid_dataset2.tfrecord"
+
+output = '/home/gulfairus/.database/lung_cancer/data/processed/valid_dataset2.tfrecord'
 
 with tf.io.TFRecordWriter(output) as writer:
     for images, labels in dataset:
         serialized = serialize_batch(images, labels)
         writer.write(serialized)
 print(f"✅ Data saved successfully")
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"elapsed_time {elapsed_time}")
+
 
 '''
 def parse_tfrecord(example_proto):
@@ -186,5 +198,5 @@ reloaded_ds = tf.data.TFRecordDataset(output)
 reloaded_ds = reloaded_ds.map(parse_tfrecord)
 
 iterator = iter(reloaded_ds)
-print(iterator.next())
+print(reloaded_ds)
 '''
