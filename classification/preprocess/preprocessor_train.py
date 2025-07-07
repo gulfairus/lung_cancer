@@ -26,12 +26,11 @@ from colorama import Fore, Style
 
 train_main = []
 train_std = []
-#start_time = time.time()
+
 bucket_name = "lung_cancer1"
+start_time = time.time()
 
 def train_data():
-    start_time = time.time()
-
 
     train_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_train.csv"))
     #valid_df = pd.read_csv(os.path.join(RAW_DATA_PATH, "miccai2023_nih-cxr-lt_labels_val.csv"))
@@ -136,7 +135,7 @@ def train_data():
     #blobs = bucket.list_blobs(prefix='dicom/dicom')
     #dicom_paths = [blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
     #dicom_paths = [f"gs://{bucket_name}/"+ blob.name for blob in blobs if blob.name.split('/')[2] in train_id][:5]
-    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in train_id][:10]
+    dicom_paths = [f"gs://{bucket_name}/dicom/dicom/"+ id for id in train_id]
     #print(dicom_paths)
 
     #print(dicom_paths)
@@ -146,7 +145,7 @@ def train_data():
     #    train_std.append(std)
 
 
-    label_array = np.array(labels.tolist()[:10], dtype=np.float32)
+    label_array = np.array(labels.tolist(), dtype=np.float32)
     #filename_tensor = tf.constant(train_df["id"].values)
     label_tensor = tf.constant(label_array)
     #print(labels.tolist()[:5])
@@ -159,11 +158,6 @@ def train_data():
     dataset = dataset.map(read_dicom_from_gcs2, num_parallel_calls=tf.data.AUTOTUNE)
     #ds_for_training = dataset.map(lambda x, y: (x, y['label']))
     #dataset = dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"elapsed_time {elapsed_time}")
-
 
     return dataset
 
@@ -210,3 +204,6 @@ with tf.io.TFRecordWriter(output) as writer:
         serialized = serialize_batch(images, labels)
         writer.write(serialized)
 print(f"✅ Data saved successfully")
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"elapsed_time {elapsed_time}")
