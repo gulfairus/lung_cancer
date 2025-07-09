@@ -81,8 +81,8 @@ def train(
 
 
     # Load dataset back
-    train_path = os.path.join(PREPROCESSED_DATA_PATH, "train_dataset2.tfrecord")
-    validation_path = os.path.join(PREPROCESSED_DATA_PATH, "valid_dataset2.tfrecord")
+    train_path = os.path.join('/home/gulfairus/.database/lung_cancer/data/processed', "train_dataset2.tfrecord")
+    validation_path = os.path.join('/home/gulfairus/.database/lung_cancer/data/processed', "valid_dataset2.tfrecord")
      #test_dataset = pd.read_csv(os.path.join(PREPROCESSED_DATA_PATH, "test_dataset.tfrecord"))
 
     reloaded_ds = tf.data.TFRecordDataset(train_path)
