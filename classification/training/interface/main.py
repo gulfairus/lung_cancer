@@ -120,9 +120,9 @@ def train(
     # Train model using `model.py`
     #model = load_model()
 
-    if model is None:
-        model = initialize_model(input_shape=(224,224,1))
-
+    #if model is None:
+    #    model = initialize_model(input_shape=(224,224,1))
+    model = initialize_model(input_shape=(224,224,1))
     model = compile_model(model, learning_rate=0.0001)
     model, history = train_model(
         model, train_data=train_dataset, batch_size=batch_size,
