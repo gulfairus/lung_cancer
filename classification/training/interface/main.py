@@ -28,7 +28,7 @@ from classification.training.ml_logic.data import load_data_to_bq
 from classification.training.ml_logic.model_scratch import initialize_model, compile_model, train_model, evaluate_model
 from classification.training.ml_logic.registry_scratch import load_model, save_model, save_results
 from classification.training.ml_logic.registry import mlflow_run, mlflow_transition_model
-#import tensorflow_addons as tfa
+import tensorflow_addons as tfa
 
 # def preprocess() -> None:
 #     #storage_client = storage.Client(GCP_PROJECT)
