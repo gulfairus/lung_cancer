@@ -51,7 +51,7 @@ def train(
         learning_rate=0.0001,
         batch_size = 32,
         patience = 2,
-        epochs=10, image_size = (224, 224)
+        epochs=100, image_size = (224, 224)
     ) -> float:
 
     """
