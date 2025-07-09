@@ -28,6 +28,7 @@ from classification.training.ml_logic.data import load_data_to_bq
 from classification.training.ml_logic.model_scratch import initialize_model, compile_model, train_model, evaluate_model
 from classification.training.ml_logic.registry import load_model, save_model, save_results
 from classification.training.ml_logic.registry import mlflow_run, mlflow_transition_model
+import tensorflow_addons as tfa
 
 # def preprocess() -> None:
 #     #storage_client = storage.Client(GCP_PROJECT)
@@ -73,8 +74,8 @@ def train(
         parsed = tf.io.parse_single_example(example_proto, features)
         images = tf.io.parse_tensor(parsed['images'], out_type=tf.float32)
         labels = tf.io.parse_tensor(parsed['labels'], out_type=tf.float32)
-        images = tf.reshape(images, [1, 224, 224])
-        labels = tf.reshape(labels, [1, 20])
+        images = tf.reshape(images, [224, 224,1])
+        labels = tf.reshape(labels, [20,])
         #id = tf.io.parse_tensor(parsed['id'], out_type=tf.string)
         return images, labels
 
@@ -86,19 +87,35 @@ def train(
 
     reloaded_ds = tf.data.TFRecordDataset(train_path)
     train_dataset = reloaded_ds.map(parse_tfrecord)
-    images = []
-    labels = []
-    for img, lbl in train_dataset:
-        images.append(img)
-        labels.append(lbl)
-    print(f"shape of images {images[0].shape}")
-    print(f"shape of labels {labels[0].shape}")
+    '''
+    def reshape_fn(image, label):
+        image = tf.reshape(image, (224,224,1))
+        label = tf.reshape(label, (20,1))
+        return image, label
+    '''
+
+    def augment_fn(image, label):
+        image = tf.image.random_flip_left_right(image)
+        image = tf.image.random_brightness(image, max_delta=0.1)
+        image = tf.image.random_contrast(image, lower=0.9, upper=1.1)
+        #image = tf.image.random_rotate(image, angles=tf.random.uniform([], -0.1, 0.1))  # radians
+        image = tfa.image.rotate(image, angles=tf.random.uniform([], -0.1, 0.1))  # radians
+        return image, label
+
+    #train_dataset = train_dataset.map(reshape_fn, num_parallel_calls=tf.data.AUTOTUNE)
+    train_dataset = train_dataset.map(augment_fn, num_parallel_calls=tf.data.AUTOTUNE)
+    train_dataset = train_dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
+
+    #iterator = iter(train_dataset)
+    #print(iterator.next())
 
     reloaded_ds = tf.data.TFRecordDataset(validation_path)
     validation_dataset = reloaded_ds.map(parse_tfrecord)
+    #validation_dataset = validation_dataset.map(reshape_fn, num_parallel_calls=tf.data.AUTOTUNE)
+    validation_dataset = validation_dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
 
 
-
+    print(Fore.BLUE + "\data loaded" + Style.RESET_ALL)
 
     # Train model using `model.py`
     model = load_model()
@@ -111,8 +128,8 @@ def train(
         model, train_data=train_dataset, batch_size=batch_size,
         patience=patience,validation_data=validation_dataset, epochs=epochs
     )
-
-    val_accuracy = np.min(history.history[tf.keras.metrics.F1Score])
+    f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
+    val_accuracy = np.min(history.history[f1_score])
 
     params = dict(
         context="train",
@@ -165,13 +182,14 @@ def evaluate(
         return images, labels
 
 
-    test_path = os.path.join(PREPROCESSED_DATA_PATH, "test_dataset.tfrecord")
+    test_path = os.path.join(PREPROCESSED_DATA_PATH, "test_dataset2.tfrecord")
 
     reloaded_ds = tf.data.TFRecordDataset(test_path)
     test_dataset = reloaded_ds.map(parse_tfrecord)
 
     metrics_dict = evaluate_model(model=model, test_data=test_dataset, batch_size=batch_size)
-    accuracy = metrics_dict[tf.keras.metrics.F1Score]
+    f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
+    accuracy = metrics_dict[f1_score]
 
     params = dict(
         context="evaluate", # Package behavior

@@ -20,6 +20,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Model, load_model
 #from tensorflow.keras.layers.experimental.preprocessing import Rescaling
 from tensorflow.keras.losses import binary_crossentropy
+import tensorflow_addons as tfa
 
 end = time.perf_counter()
 print(f"\n✅ TensorFlow loaded ({round(end - start, 2)}s)")
@@ -31,19 +32,19 @@ def initialize_model(input_shape) -> Model:
     Initialize the Neural Network with random weights
     """
     model = Sequential()
-    model.add(Conv2D(32,kernel_size=(3,3), padding="SAME", activation="relu", input_shape=(224,224,1)))
+    model.add(Conv2D(32,kernel_size=(3,3), padding="SAME", activation="relu", input_shape=input_shape))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), padding="same"))
 
-    model.add(Conv2D(64,kernel_size=(3,3), padding="SAME", activation="relu", input_shape=(224,224,1)))
+    model.add(Conv2D(64,kernel_size=(3,3), padding="SAME", activation="relu"))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), padding="same"))
 
-    model.add(Conv2D(128,kernel_size=(3,3), padding="SAME", activation="relu", input_shape=(224,224,1)))
+    model.add(Conv2D(128,kernel_size=(3,3), padding="SAME", activation="relu"))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), padding="same"))
 
-    model.add(Conv2D(256,kernel_size=(3,3), padding="SAME", activation="relu", input_shape=(224,224,1)))
+    model.add(Conv2D(256,kernel_size=(3,3), padding="SAME", activation="relu"))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), padding="same"))
 
@@ -80,10 +81,10 @@ def compile_model(model: Model, learning_rate) -> Model:
     IDF = tf.cast(IDF, tf.float32)
     TF_IDF_pos = TF_pos * IDF
     weights_pos = 1.0 / TF_IDF_pos  # Invert to give higher weights to rarer labels
-    weights_pos = weights_pos / np.max(weights_pos)  # Normalize to [0, 1]
+    weights_pos = weights_pos / tf.reduce_max(weights_pos)  # Normalize to [0, 1]
     TF_IDF_neg = TF_neg * IDF
     weights_neg = 1.0 / TF_IDF_neg  # Invert to give higher weights to rarer labels
-    weights_neg = weights_neg / np.max(weights_neg)  # Normalize to [0, 1]
+    weights_neg = weights_neg / tf.reduce_max(weights_neg)  # Normalize to [0, 1]
 
 
     def get_weighted_loss(pos_weights, neg_weights, epsilon=1e-7):
@@ -95,10 +96,11 @@ def compile_model(model: Model, learning_rate) -> Model:
         return weighted_loss
 
     optimizer = optimizers.Adam(learning_rate=learning_rate)
+    f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
     #model.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=['accuracy'])
 
-    #model.compile(optimizer='adam', loss=get_weighted_loss(weights_pos, weights_neg), metrics=[tf.keras.metrics.F1Score])
-    model.compile(optimizer='adam', loss=get_weighted_loss(weights_pos, weights_neg), metrics=["accuracy"])
+    model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg), metrics=[f1_score])
+    #model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg), metrics=['accuracy'])
 
     print("✅ Model compiled")
 
@@ -181,7 +183,8 @@ def evaluate_model(
     )
 
     loss = metrics["loss"]
-    accuracy = metrics["accuracy"]
+    f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
+    accuracy = metrics[f1_score]
 
     print(f"✅ Model evaluated, accuracy: {round(accuracy, 2)}")
 

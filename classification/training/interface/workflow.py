@@ -5,8 +5,8 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from prefect import task, flow
 
-from classification.resnet50.interface.main import evaluate, preprocess, train
-from classification.resnet50.ml_logic.registry import mlflow_transition_model
+from classification.training.interface.main import evaluate, preprocess, train
+from classification.training.ml_logic.registry import mlflow_transition_model
 from classification.params import *
 
 @task
