@@ -118,7 +118,7 @@ def train(
     print(Fore.BLUE + "\data loaded" + Style.RESET_ALL)
 
     # Train model using `model.py`
-    model = load_model()
+    #model = load_model()
 
     if model is None:
         model = initialize_model(input_shape=(224,224,1))
