@@ -188,8 +188,7 @@ def evaluate(
     test_dataset = reloaded_ds.map(parse_tfrecord)
 
     metrics_dict = evaluate_model(model=model, test_data=test_dataset, batch_size=batch_size)
-    f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
-    accuracy = metrics_dict[f1_score]
+    accuracy = metrics_dict['auroc']
 
     params = dict(
         context="evaluate", # Package behavior
@@ -245,9 +244,6 @@ def pred(X_pred: pd.DataFrame = None) -> np.ndarray:
         image = image.img_to_array(image)
         image = np.expand_dims(image, axis=0)
         prediction = model.predict(image)
-
-
-
 
     print("\n✅ prediction done: ", prediction, prediction.shape, "\n")
     return prediction

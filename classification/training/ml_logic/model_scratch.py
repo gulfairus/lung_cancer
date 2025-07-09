@@ -98,12 +98,9 @@ def compile_model(model: Model, learning_rate) -> Model:
     optimizer = optimizers.Adam(learning_rate=learning_rate)
     f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
 
-    model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg), metrics=[tf.keras.metrics.AUC(
-            name='auroc',
-            multi_label=True,
-            num_labels=20,
-            from_logits=False
-        )])
+    model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg),
+                  metrics=[tf.keras.metrics.AUC(name='auroc', multi_label=True, num_labels=20, from_logits=False),
+                           tf.keras.metrics.AUC(name='auprc', curve='PR', multi_label=True, num_labels=20)])
 
     print("✅ Model compiled")
 
@@ -186,12 +183,7 @@ def evaluate_model(
     )
 
     loss = metrics["loss"]
-    accuracy = metrics[tf.keras.metrics.AUC(
-            name='auroc',
-            multi_label=True,
-            num_labels=20,
-            from_logits=False
-        )]
+    accuracy = metrics['auroc', 'auprc']
 
     print(f"✅ Model evaluated, accuracy: {round(accuracy, 2)}")
 
