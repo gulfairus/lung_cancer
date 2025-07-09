@@ -26,9 +26,9 @@ import tensorflow as tf
 import tensorflow_io as tfio
 from classification.training.ml_logic.data import load_data_to_bq
 from classification.training.ml_logic.model_scratch import initialize_model, compile_model, train_model, evaluate_model
-from classification.training.ml_logic.registry import load_model, save_model, save_results
+from classification.training.ml_logic.registry_scratch import load_model, save_model, save_results
 from classification.training.ml_logic.registry import mlflow_run, mlflow_transition_model
-import tensorflow_addons as tfa
+#import tensorflow_addons as tfa
 
 # def preprocess() -> None:
 #     #storage_client = storage.Client(GCP_PROJECT)
@@ -128,8 +128,8 @@ def train(
         model, train_data=train_dataset, batch_size=batch_size,
         patience=patience,validation_data=validation_dataset, epochs=epochs
     )
-    f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
-    val_accuracy = np.min(history.history[f1_score])
+
+    val_accuracy = np.min(history.history['auroc'])
 
     params = dict(
         context="train",

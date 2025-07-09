@@ -97,10 +97,13 @@ def compile_model(model: Model, learning_rate) -> Model:
 
     optimizer = optimizers.Adam(learning_rate=learning_rate)
     f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
-    #model.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=['accuracy'])
 
-    model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg), metrics=[f1_score])
-    #model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg), metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg), metrics=[tf.keras.metrics.AUC(
+            name='auroc',
+            multi_label=True,
+            num_labels=20,
+            from_logits=False
+        )])
 
     print("✅ Model compiled")
 
@@ -183,8 +186,12 @@ def evaluate_model(
     )
 
     loss = metrics["loss"]
-    f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
-    accuracy = metrics[f1_score]
+    accuracy = metrics[tf.keras.metrics.AUC(
+            name='auroc',
+            multi_label=True,
+            num_labels=20,
+            from_logits=False
+        )]
 
     print(f"✅ Model evaluated, accuracy: {round(accuracy, 2)}")
 
