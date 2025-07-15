@@ -131,8 +131,8 @@ def train_model(
         min_delta=.01,
         mode='auto',
         restore_best_weights=True,
-        verbose=1,
-        start_from_epoch = 10
+        verbose=1
+        #start_from_epoch = 10
     )
 
     rlr = ReduceLROnPlateau( monitor="val_loss",

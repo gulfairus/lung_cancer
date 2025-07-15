@@ -48,7 +48,7 @@ import tensorflow_addons as tfa
 
 @mlflow_run
 def train(
-        learning_rate=0.0001,
+        learning_rate=0.001,
         batch_size = 32,
         patience = 2,
         epochs=100, image_size = (224, 224)
