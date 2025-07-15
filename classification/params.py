@@ -3,7 +3,7 @@ import numpy as np
 
 ##################  VARIABLES  ##################
 DATA_SIZE = os.environ.get("DATA_SIZE")
-CHUNK_SIZE = os.environ.get("CHUNK_SIZE")
+CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE"))
 MODEL_TARGET = os.environ.get("MODEL_TARGET")
 GCP_PROJECT = os.environ.get("GCP_PROJECT")
 GCP_PROJECT_WAGON = os.environ.get("GCP_PROJECT_WAGON")
@@ -49,12 +49,12 @@ TF_ENABLE_ONEDNN_OPTS = os.environ.get("TF_ENABLE_ONEDNN_OPTS")
 
 
 ################## VALIDATIONS #################
-'''
+
 env_valid_options = dict(
     DATA_SIZE=["1k", "200k", "all"],
     MODEL_TARGET=["local", "gcs", "mlflow"],
 )
-'''
+
 def validate_env_value(env, valid_options):
     env_value = os.environ[env]
     if env_value not in valid_options:
