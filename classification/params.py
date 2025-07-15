@@ -25,7 +25,8 @@ GAR_MEMORY = os.environ.get("GAR_MEMORY")
 #DATA_SOURCE = os.environ.get("DATA_SOURCE")
 ##################  CONSTANTS  #####################
 LOCAL_DATA_PATH = os.path.join(os.path.expanduser('~'), ".database", "lung_cancer", "data")
-LOCAL_REGISTRY_PATH =  os.path.join(os.path.expanduser('~'), ".database", "lung_cancer", "training_outputs")#
+
+LOCAL_REGISTRY_PATH =  os.path.join(os.path.expanduser('~'), ".database", "lung_cancer", "training_outputs")
 
 
 TRAIN_DATA_PATH_CLOUD = "/home/user/Covid19/raw_data/cloud/train_test/train_test/train"
