@@ -26,7 +26,7 @@ import tensorflow as tf
 import tensorflow_io as tfio
 from classification.training.ml_logic.data import load_data_to_bq
 from classification.training.ml_logic.model_scratch import initialize_model, compile_model, train_model, evaluate_model
-from classification.training.ml_logic.registry_scratch import load_model, save_model, save_results
+from classification.training.ml_logic.registry_scratch import load_model, save_model, save_results, save_history
 from classification.training.ml_logic.registry import mlflow_run, mlflow_transition_model
 import tensorflow_addons as tfa
 
@@ -138,6 +138,7 @@ def train(
     )
 
     save_results(params=params, metrics=dict(accuracy=val_accuracy))
+    save_history(history=history)
 
     # Save model weight on the hard drive (and optionally on GCS too!)
     save_model(model=model)

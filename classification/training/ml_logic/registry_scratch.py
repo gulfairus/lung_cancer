@@ -32,6 +32,23 @@ def save_results(params: dict, metrics: dict) -> None:
 
     print("✅ Results saved locally")
 
+def save_history(history) -> None:
+    """
+    Persist params & metrics locally on the hard drive at
+    "{LOCAL_REGISTRY_PATH}/params/{current_timestamp}.pickle"
+    "{LOCAL_REGISTRY_PATH}/metrics/{current_timestamp}.pickle"
+    - (unit 03 only) if MODEL_TARGET='mlflow', also persist them on MLflow
+    """
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+
+    # Save params locally
+    if history is not None:
+        history_path = os.path.join(LOCAL_REGISTRY_PATH, "history/cnn_scratch", timestamp + ".pickle")
+        with open(history_path, "wb") as file:
+            pickle.dump(history, file)
+
+    print("✅ history saved locally")
+
 
 def save_model(model: keras.Model = None) -> None:
     """
