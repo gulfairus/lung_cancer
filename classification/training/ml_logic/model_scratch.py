@@ -113,37 +113,8 @@ def compile_model(model: Model, learning_rate) -> Model:
         return K.mean(f1)
     '''
 
-    class MultiLabelF1(tf.keras.metrics.Metric):
-        def __init__(self, threshold=0.5, name='f1_score', **kwargs):
-            super().__init__(name=name, **kwargs)
-            self.threshold = threshold
-            self.tp = self.add_weight(name='tp', shape=(5,), initializer='zeros')
-            self.fp = self.add_weight(name='fp', shape=(5,), initializer='zeros')
-            self.fn = self.add_weight(name='fn', shape=(5,), initializer='zeros')
-
-        def update_state(self, y_true, y_pred, sample_weight=None):
-            y_pred = tf.cast(y_pred > self.threshold, tf.float32)
-            y_true = tf.cast(y_true, tf.float32)
-
-            self.tp.assign_add(tf.reduce_sum(y_pred * y_true, axis=0))
-            self.fp.assign_add(tf.reduce_sum(y_pred * (1 - y_true), axis=0))
-            self.fn.assign_add(tf.reduce_sum((1 - y_pred) * y_true, axis=0))
-
-        def result(self):
-            precision = self.tp / (self.tp + self.fp + 1e-8)
-            recall = self.tp / (self.tp + self.fn + 1e-8)
-            f1 = 2 * precision * recall / (precision + recall + 1e-8)
-            return tf.reduce_mean(f1)  # macro F1
-
-        def reset_states(self):
-            for var in self.variables:
-                var.assign(tf.zeros_like(var))
-
-    f1_score = MultiLabelF1(threshold=0.5)
-
     model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg),
-                  metrics=[tf.keras.metrics.AUC(name='auroc', multi_label=True, num_labels=20, from_logits=False),
-                           f1_score])
+                  metrics=[tf.keras.metrics.AUC(name='auroc', multi_label=True, num_labels=20, from_logits=False)])
 
     print("✅ Model compiled")
 
@@ -238,7 +209,7 @@ def evaluate_model(
     )
 
     loss = metrics["loss"]
-    accuracy = metrics['auroc', 'f1_score']
+    accuracy = metrics['auroc']
 
     print(f"✅ Model evaluated, accuracy: {round(accuracy, 2)}")
 
