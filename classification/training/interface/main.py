@@ -104,7 +104,7 @@ def train(
 
     #train_dataset = train_dataset.map(reshape_fn, num_parallel_calls=tf.data.AUTOTUNE)
     train_dataset = train_dataset.map(augment_fn, num_parallel_calls=tf.data.AUTOTUNE)
-    train_dataset = train_dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
+    train_dataset = train_dataset.shuffle(1000).batch(32).prefetch(tf.data.AUTOTUNE)
 
     #iterator = iter(train_dataset)
     #print(iterator.next())
@@ -112,7 +112,7 @@ def train(
     reloaded_ds = tf.data.TFRecordDataset(validation_path)
     validation_dataset = reloaded_ds.map(parse_tfrecord)
     #validation_dataset = validation_dataset.map(reshape_fn, num_parallel_calls=tf.data.AUTOTUNE)
-    validation_dataset = validation_dataset.shuffle(100).batch(32).prefetch(tf.data.AUTOTUNE)
+    validation_dataset = validation_dataset.shuffle(1000).batch(32).prefetch(tf.data.AUTOTUNE)
 
 
     print(Fore.BLUE + "\data loaded" + Style.RESET_ALL)
@@ -123,7 +123,7 @@ def train(
     #if model is None:
     #    model = initialize_model(input_shape=(224,224,1))
     model = initialize_model(input_shape=(224,224,1))
-    model = compile_model(model, learning_rate=0.0001)
+    model = compile_model(model, learning_rate=learning_rate)
     model, history = train_model(
         model, train_data=train_dataset, batch_size=batch_size,
         patience=patience,validation_data=validation_dataset, epochs=epochs

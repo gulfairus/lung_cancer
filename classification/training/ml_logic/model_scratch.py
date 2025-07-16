@@ -21,6 +21,7 @@ from tensorflow.keras.models import Model, load_model
 #from tensorflow.keras.layers.experimental.preprocessing import Rescaling
 from tensorflow.keras.losses import binary_crossentropy
 import tensorflow_addons as tfa
+from keras import backend as K
 
 end = time.perf_counter()
 print(f"\n✅ TensorFlow loaded ({round(end - start, 2)}s)")
@@ -96,7 +97,20 @@ def compile_model(model: Model, learning_rate) -> Model:
         return weighted_loss
 
     optimizer = optimizers.Adam(learning_rate=learning_rate)
-    f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
+    #f1_score = tfa.metrics.F1Score(num_classes=20, average='macro', threshold=0.5)
+
+    def f1_score(y_true, y_pred):
+        y_pred = tf.round(y_pred)
+        tp = K.sum(K.cast(y_true * y_pred, 'float'), axis=0)
+        fp = K.sum(K.cast((1 - y_true) * y_pred, 'float'), axis=0)
+        fn = K.sum(K.cast(y_true * (1 - y_pred), 'float'), axis=0)
+
+        precision = tp / (tp + fp + K.epsilon())
+        recall = tp / (tp + fn + K.epsilon())
+
+        f1 = 2 * precision * recall / (precision + recall + K.epsilon())
+        return K.mean(f1)
+
 
     model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg),
                   metrics=[tf.keras.metrics.AUC(name='auroc', multi_label=True, num_labels=20, from_logits=False),
@@ -117,7 +131,7 @@ def train_model(
     Fit the model and return a tuple (fitted_model, history)
     """
     print(Fore.BLUE + "\nTraining model..." + Style.RESET_ALL)
-    '''
+
     es = EarlyStopping(
         monitor="val_loss",
         patience=patience,
@@ -140,16 +154,19 @@ def train_model(
                             factor=0.2,
                             patience=patience,
                             verbose=0,
-                            mode="auto",
-                            min_delta=0.001)
+                            mode="min",
+                            #min_delta=0.001,
+                            min_lr=1e-7)
+
     '''
     rlr = ReduceLROnPlateau( monitor="val_auroc",
                             factor=0.2,
                             patience=patience,
-                            verbose=1,
+                            verbose=0,
                             mode="max",
                             #min_delta=0.001,
                             min_lr=1e-7)
+    '''
 
     #steps = len(train_names)//batch_size
 
