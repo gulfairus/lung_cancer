@@ -100,7 +100,7 @@ def compile_model(model: Model, learning_rate) -> Model:
 
     model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg),
                   metrics=[tf.keras.metrics.AUC(name='auroc', multi_label=True, num_labels=20, from_logits=False),
-                           tf.keras.metrics.AUC(name='auprc', curve='PR', multi_label=True, num_labels=20)])
+                           f1_score])
 
     print("✅ Model compiled")
 
@@ -117,30 +117,39 @@ def train_model(
     Fit the model and return a tuple (fitted_model, history)
     """
     print(Fore.BLUE + "\nTraining model..." + Style.RESET_ALL)
-
+    '''
     es = EarlyStopping(
         monitor="val_loss",
         patience=patience,
+        mode='min',
         restore_best_weights=True,
         verbose=1
     )
-
+    '''
     es = EarlyStopping(
-        monitor="val_loss",
+        monitor="val_auroc",
         patience=patience,
-        min_delta=.01,
-        mode='auto',
+        #min_delta=.01,
+        mode='max',
         restore_best_weights=True,
         verbose=1
         #start_from_epoch = 10
     )
-
+    '''
     rlr = ReduceLROnPlateau( monitor="val_loss",
                             factor=0.2,
                             patience=patience,
                             verbose=0,
                             mode="auto",
                             min_delta=0.001)
+    '''
+    rlr = ReduceLROnPlateau( monitor="val_auroc",
+                            factor=0.2,
+                            patience=patience,
+                            verbose=1,
+                            mode="max",
+                            #min_delta=0.001,
+                            min_lr=1e-7)
 
     #steps = len(train_names)//batch_size
 
@@ -183,7 +192,7 @@ def evaluate_model(
     )
 
     loss = metrics["loss"]
-    accuracy = metrics['auroc', 'auprc']
+    accuracy = metrics['auroc', 'f1_score']
 
     print(f"✅ Model evaluated, accuracy: {round(accuracy, 2)}")
 
