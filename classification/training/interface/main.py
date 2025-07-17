@@ -50,8 +50,8 @@ import tensorflow_addons as tfa
 def train(
         learning_rate=0.001,
         batch_size = 32,
-        patience = 5,
-        epochs=50, image_size = (224, 224)
+        patience = 3,
+        epochs=100, image_size = (224, 224)
     ) -> float:
 
     """
