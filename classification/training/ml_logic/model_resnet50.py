@@ -34,6 +34,8 @@ def initialize_model(input_shape) -> Model:
 
     base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3), classifier_activation="sigmoid")
     #base_model.trainable = False  # freeze base initially
+    for layer in base_model.layers:
+        layer.trainable = False
 
     model = models.Sequential([
         base_model,
@@ -51,7 +53,7 @@ def initialize_model(input_shape) -> Model:
 #Compile the CNN
 
 
-def compile_model(model: Model, learning_rate) -> Model:
+def compile_model(model: Model, learning_rate, base_model) -> Model:
     """
     Compile the Neural Network
     """
@@ -97,6 +99,8 @@ def compile_model(model: Model, learning_rate) -> Model:
         f1 = 2 * precision * recall / (precision + recall + K.epsilon())
         return K.mean(f1)
     '''
+    for layer in base_model.layers[-30:]:  # unfreeze last 30 layers
+        layer.trainable = True
 
     model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg),
                   metrics=[tf.keras.metrics.AUC(name='auroc', multi_label=True, num_labels=20, from_logits=False)])
