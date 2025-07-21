@@ -75,6 +75,7 @@ def train(
         images = tf.io.parse_tensor(parsed['images'], out_type=tf.float32)
         labels = tf.io.parse_tensor(parsed['labels'], out_type=tf.float32)
         images = tf.reshape(images, [224, 224,1])
+        images = tf.image.grayscale_to_rgb(images)  # <--- converts (224,224,1) -> (224,224,3)
         labels = tf.reshape(labels, [20,])
         #id = tf.io.parse_tensor(parsed['id'], out_type=tf.string)
         return images, labels
