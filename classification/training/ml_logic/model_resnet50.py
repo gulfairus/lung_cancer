@@ -12,7 +12,8 @@ start = time.perf_counter()
 import os
 import tensorflow as tf
 from tensorflow import keras
-from keras import Model, Sequential, layers, regularizers, optimizers
+from tensorflow.keras import layers, models, optimizers
+#from keras import Model, Sequential, layers, regularizers, optimizers
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, BatchNormalization, GlobalAveragePooling2D
@@ -22,6 +23,7 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.losses import binary_crossentropy
 import tensorflow_addons as tfa
 from keras import backend as K
+from tensorflow.keras.applications import ResNet50
 
 end = time.perf_counter()
 print(f"\n✅ TensorFlow loaded ({round(end - start, 2)}s)")
@@ -29,34 +31,17 @@ print(f"\n✅ TensorFlow loaded ({round(end - start, 2)}s)")
 
 
 def initialize_model(input_shape) -> Model:
-    """
-    Initialize the Neural Network with random weights
-    """
-    model = Sequential()
-    model.add(Conv2D(32,kernel_size=(3,3), padding="SAME", activation="relu", input_shape=input_shape))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2), padding="same"))
 
-    model.add(Conv2D(64,kernel_size=(3,3), padding="SAME", activation="relu"))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2), padding="same"))
+    base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3), classifier_activation="sigmoid")
+    #base_model.trainable = False  # freeze base initially
 
-    model.add(Conv2D(128,kernel_size=(3,3), padding="SAME", activation="relu"))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2), padding="same"))
-
-    model.add(Conv2D(256,kernel_size=(3,3), padding="SAME", activation="relu"))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2), padding="same"))
-
-    model.add(GlobalAveragePooling2D())
-
-    model.add(Dense(128, activation="relu"))
-    model.add(Dropout(0.5))
-    model.add(Dense(64, activation="relu"))
-    model.add(Dropout(0.5))
-
-    model.add(Dense(20, activation='sigmoid'))
+    model = models.Sequential([
+        base_model.output,
+        layers.GlobalAveragePooling2D(),
+        layers.Dense(1024, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(20, activation='sigmoid')
+])
 
     print("✅ Model initialized")
     print(model.summary)
