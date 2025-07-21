@@ -32,11 +32,11 @@ print(f"\n✅ TensorFlow loaded ({round(end - start, 2)}s)")
 
 def initialize_model(input_shape) -> Model:
 
-    base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3), classifier_activation="sigmoid")
+    base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 1), classifier_activation="sigmoid")
     #base_model.trainable = False  # freeze base initially
 
     model = models.Sequential([
-        base_model.output,
+        base_model,
         layers.GlobalAveragePooling2D(),
         layers.Dense(1024, activation='relu'),
         layers.Dropout(0.5),
