@@ -123,8 +123,8 @@ def train(
 
     #if model is None:
     #    model = initialize_model(input_shape=(224,224,1))
-    model = initialize_model(input_shape=(224,224,1))
-    model = compile_model(model, learning_rate=learning_rate)
+    model, base_model = initialize_model(input_shape=(224,224,1))
+    model = compile_model(model, learning_rate=learning_rate, base_model=base_model)
     model, history = train_model(
         model, train_data=train_dataset, batch_size=batch_size,
         patience=patience,validation_data=validation_dataset, epochs=epochs

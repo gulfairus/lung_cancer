@@ -48,7 +48,7 @@ def initialize_model(input_shape) -> Model:
     print("✅ Model initialized")
     print(model.summary)
 
-    return model
+    return model, base_model
 
 #Compile the CNN
 
