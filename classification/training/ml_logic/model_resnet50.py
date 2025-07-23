@@ -37,13 +37,21 @@ def initialize_model(input_shape) -> Model:
     for layer in base_model.layers:
         layer.trainable = False
 
+    '''
     model = models.Sequential([
         base_model,
         layers.GlobalAveragePooling2D(),
         layers.Dense(1024, activation='relu'),
         layers.Dropout(0.5),
         layers.Dense(20, activation='sigmoid')
-])
+    ])
+    '''
+    x = base_model.output,
+    x = layers.GlobalAveragePooling2D()(x),
+    x = layers.Dense(1024, activation='relu')(x),
+    x = layers.Dropout(0.5)(x),
+    outputs = layers.Dense(20, activation='sigmoid')(x)
+    model = Model(inputs=base_model.input, outputs=outputs)
 
     print("✅ Model initialized")
     print(model.summary)
@@ -99,7 +107,7 @@ def compile_model(model: Model, learning_rate, base_model) -> Model:
         f1 = 2 * precision * recall / (precision + recall + K.epsilon())
         return K.mean(f1)
     '''
-    for layer in base_model.layers[-30:]:  # unfreeze last 30 layers
+    for layer in base_model.layers[-100:]:  # unfreeze last 30 layers
         layer.trainable = True
 
     model.compile(optimizer=optimizer, loss=get_weighted_loss(weights_pos, weights_neg),
