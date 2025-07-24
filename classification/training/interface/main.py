@@ -123,7 +123,7 @@ def train(
 
     #if model is None:
     #    model = initialize_model(input_shape=(224,224,1))
-    model, base_model = initialize_model(input_shape=(224,224,1))
+    model, base_model = initialize_model(input_shape=(224,224,3))
     model = compile_model(model, learning_rate=learning_rate, base_model=base_model)
     model, history = train_model(
         model, train_data=train_dataset, batch_size=batch_size,

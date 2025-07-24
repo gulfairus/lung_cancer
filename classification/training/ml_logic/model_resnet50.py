@@ -16,7 +16,7 @@ from tensorflow.keras import layers, models, optimizers
 #from keras import Model, Sequential, layers, regularizers, optimizers
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, BatchNormalization, GlobalAveragePooling2D
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, BatchNormalization, GlobalAveragePooling2D, Input
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import Model, load_model
 #from tensorflow.keras.layers.experimental.preprocessing import Rescaling
@@ -32,27 +32,27 @@ print(f"\n✅ TensorFlow loaded ({round(end - start, 2)}s)")
 
 def initialize_model(input_shape) -> Model:
 
-    base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3), classifier_activation="sigmoid")
+    base_model = ResNet50(weights='imagenet', include_top=False, input_tensor=Input(shape=(224, 224, 3)), classifier_activation="sigmoid")
     #base_model.trainable = False  # freeze base initially
     for layer in base_model.layers:
         layer.trainable = False
 
-    '''
+
     model = models.Sequential([
         base_model,
-        layers.GlobalAveragePooling2D(),
-        layers.Dense(1024, activation='relu'),
-        layers.Dropout(0.5),
-        layers.Dense(20, activation='sigmoid')
+        GlobalAveragePooling2D(),
+        Dense(1024, activation='relu'),
+        Dropout(0.5),
+        Dense(20, activation='sigmoid')
     ])
     '''
     x = base_model.output,
-    x = layers.GlobalAveragePooling2D()(x),
-    x = layers.Dense(1024, activation='relu')(x),
-    x = layers.Dropout(0.5)(x),
-    outputs = layers.Dense(20, activation='sigmoid')(x)
+    x = GlobalAveragePooling2D() (x),
+    x = Dense(1024, activation='relu') (x),
+    x = Dropout(0.5) (x),
+    outputs = layers.Dense(20, activation='sigmoid') (x)
     model = Model(inputs=base_model.input, outputs=outputs)
-
+    '''
     print("✅ Model initialized")
     print(model.summary)
 
