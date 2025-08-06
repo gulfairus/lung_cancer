@@ -134,6 +134,21 @@ def train(
         patience=patience,validation_data=validation_dataset, epochs=epochs
     )
 
+    #plot graph between training and validation loss
+    plt.plot(history.history["loss"])
+    plt.plot(history.history["val_loss"])
+    plt.legend(["Training", "Validation"])
+    plt.title("Training and validation losses")
+    plt.xlabel("epoch")
+    plt.show()
+
+    plt.plot(history.history["auroc"])
+    plt.plot(history.history["val_auroc"])
+    plt.legend(["Training", "Validation"])
+    plt.title("Training and validation auroc")
+    plt.xlabel("epoch")
+    plt.show()
+
     val_accuracy = np.min(history.history['auroc'])
 
     params = dict(
@@ -205,6 +220,8 @@ def evaluate(
     save_results(params=params, metrics=metrics_dict)
 
     print("✅ evaluate() done \n")
+    print(metrics_dict)
+    print(accuracy)
 
     return accuracy
 

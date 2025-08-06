@@ -60,7 +60,8 @@ def save_model(model: keras.Model = None) -> None:
     timestamp = time.strftime("%Y%m%d-%H%M%S")
 
     # Save model locally
-    model_path = os.path.join(LOCAL_REGISTRY_PATH, "models/resnet101V2", f"{timestamp}resnet101V2.h5")
+    #model_path = os.path.join(LOCAL_REGISTRY_PATH, "models/resnet101V2", f"{timestamp}resnet101V2.h5")
+    model_path = os.path.join(LOCAL_REGISTRY_PATH, "models/resnet101V2", "resnet101V2.h5")
     model.save(model_path)
 
     print("✅ Model saved locally")
